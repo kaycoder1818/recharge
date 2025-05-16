@@ -1697,9 +1697,9 @@ def set_station_state_machine():
 
         cursor = get_cursor()
         if cursor:
-            # Update the station status in store_recharge table
+            # Update the station status in station_recharge table
             update_query = """
-            UPDATE store_recharge 
+            UPDATE station_recharge 
             SET stationStatus = %s 
             WHERE stationName = %s
             """
