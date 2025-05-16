@@ -239,12 +239,8 @@ def create_store_recharge_table():
                     station1BottleCount TEXT,
                     station2BottleCount TEXT,
                     station3BottleCount TEXT,
-                    station1Points TEXT,
-                    station2Points TEXT,
-                    station3Points TEXT,
-                    station1TimeLeft TEXT,
-                    station2TimeLeft TEXT,
-                    station3TimeLeft TEXT,
+                    rewardPoints TEXT,
+                    TimeLeft TEXT,
                     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
                 """
@@ -317,6 +313,7 @@ def create_rewards_recharge_table():
                 CREATE TABLE rewards_recharge (
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     uniqueId TEXT NOT NULL,
+                    rewardId TEXT,
                     rewardName TEXT,
                     rewardTime TEXT,
                     rewardCost TEXT,
@@ -631,15 +628,15 @@ def insert_mockup_store_recharge():
                 INSERT INTO store_recharge (
                     uniqueId, 
                     station1BottleCount, station2BottleCount, station3BottleCount,
-                    station1Points, station2Points, station3Points,
-                    station1TimeLeft, station2TimeLeft, station3TimeLeft
+                    rewardPoints,
+                    TimeLeft
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
             data = (
-                "mockUniqueId",
+                "1234",
                 "10", "15", "20",  # bottle counts
-                "5", "8", "12",     # points
-                "00:05:00", "00:04:30", "00:06:00"  # time left
+                "5",     # points
+                "00:06:00"  # time left
             )
             cursor.execute(sql_insert, data)
             db_connection.commit()
@@ -653,7 +650,6 @@ def insert_mockup_store_recharge():
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
 
-
 @app.route('/insert-mockup-rewards-recharge', methods=['GET'])
 def insert_mockup_rewards_recharge():
     try:
@@ -664,10 +660,10 @@ def insert_mockup_rewards_recharge():
         if cursor:
             # Insert mock data into 'rewards_recharge' table
             sql_insert = """
-            INSERT INTO rewards_recharge (uniqueId, rewardName, rewardTime, rewardCost)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO rewards_recharge (uniqueId, rewardId, rewardName, rewardTime, rewardCost)
+            VALUES (%s, %s, %s, %s, %s)
             """
-            data = ('1234', 'Add 15 minutes', '15', "5")
+            data = ('1234', 'ADD15', 'Add 15 minutes', '15', "5")
             cursor.execute(sql_insert, data)
             db_connection.commit()
             cursor.close()
@@ -927,7 +923,7 @@ def edit_user_recharge():
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
 
-@app.route('/user/delete', methods=['POST'])
+@app.route('/user/delete', methods=['DELETE'])
 def delete_user_by_email():
     try:
         if not is_mysql_available():
@@ -1160,76 +1156,76 @@ def get_user_reward_points():
         return handle_mysql_error(e)
 
 @app.route('/user/redeem-rewards', methods=['POST'])
-def redeem_rewards_recharge():
+def redeem_rewards():
     try:
         if not is_mysql_available():
-            return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
+            return jsonify({"error": "MySQL database not responding"}), 500
 
         data = request.get_json()
         email = data.get('email')
-        station_name = data.get('stationName', 'station1Points')  # default to 'station1Points'
+        reward_id = data.get('rewardId')
 
-        if not email:
-            return jsonify({"error": "Missing 'email' in request body"}), 400
-
-        # Validate station name
-        valid_stations = ['station1Points', 'station2Points', 'station3Points']
-        if station_name not in valid_stations:
-            return jsonify({"error": f"Invalid stationName. Must be one of: {', '.join(valid_stations)}"}), 400
+        if not email or not reward_id:
+            return jsonify({"error": "Missing 'email' or 'rewardId'"}), 400
 
         cursor = get_cursor()
         if not cursor:
             return jsonify({"error": "Database connection not available"}), 500
 
-        # Step 1: Get uniqueId from users_recharge
-        cursor.execute("SELECT uniqueId FROM users_recharge WHERE email = %s LIMIT 1", (email,))
-        user = cursor.fetchone()
-        if not user:
+        # Step 1: Get uniqueId from users_recharge by email
+        cursor.execute("SELECT uniqueId FROM users_recharge WHERE email = %s", (email,))
+        user_row = cursor.fetchone()
+        if not user_row:
             cursor.close()
-            return jsonify({"error": "User with given email not found"}), 404
+            return jsonify({"error": "User not found"}), 404
+        unique_id = user_row[0]
 
-        unique_id = user[0]
-
-        # Step 2: Get rewardTime from rewards_recharge
-        cursor.execute("SELECT rewardTime FROM rewards_recharge WHERE uniqueId = %s LIMIT 1", (unique_id,))
-        reward = cursor.fetchone()
-        if not reward:
+        # Step 2: Get rewardTime and rewardCost from rewards_recharge by rewardId
+        cursor.execute("SELECT rewardTime, rewardCost FROM rewards_recharge WHERE rewardId = %s", (reward_id,))
+        reward_row = cursor.fetchone()
+        if not reward_row:
             cursor.close()
-            return jsonify({"error": "No reward found for this user"}), 404
+            return jsonify({"error": "Reward not found"}), 404
+        reward_time_minutes = int(reward_row[0])
+        reward_cost = int(reward_row[1])
 
-        try:
-            reward_time = int(reward[0])
-        except (ValueError, TypeError):
+        # Step 3: Update store_recharge
+        cursor.execute("SELECT rewardPoints, TimeLeft FROM store_recharge WHERE uniqueId = %s", (unique_id,))
+        store_row = cursor.fetchone()
+        if not store_row:
             cursor.close()
-            return jsonify({"error": "Invalid rewardTime format"}), 500
+            return jsonify({"error": "Store data not found for user"}), 404
 
-        # Step 3: Get current points from store_recharge
-        cursor.execute(f"SELECT {station_name} FROM store_recharge WHERE uniqueId = %s LIMIT 1", (unique_id,))
-        store = cursor.fetchone()
-        if not store:
-            cursor.close()
-            return jsonify({"error": "No store record found for this user"}), 404
+        current_points = int(store_row[0])
+        current_time_left = store_row[1]  # Expected format "HH:MM:SS"
 
-        try:
-            current_points = int(store[0] or 0)
-        except (ValueError, TypeError):
-            cursor.close()
-            return jsonify({"error": "Invalid point value in store record"}), 500
+        new_points = max(current_points - reward_cost, 0)
 
-        new_total = current_points + reward_time
+        # Convert current_time_left to timedelta
+        h, m, s = map(int, current_time_left.split(':'))
+        current_td = timedelta(hours=h, minutes=m, seconds=s)
+        reward_td = timedelta(minutes=reward_time_minutes)
+        new_time_left = current_td + reward_td
 
-        # Step 4: Update the station points
-        cursor.execute(
-            f"UPDATE store_recharge SET {station_name} = %s WHERE uniqueId = %s",
-            (str(new_total), unique_id)
-        )
+        # Format new time left to HH:MM:SS
+        total_seconds = int(new_time_left.total_seconds())
+        hours, remainder = divmod(total_seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        new_time_left_str = f"{hours:02}:{minutes:02}:{seconds:02}"
+
+        # Update store_recharge
+        cursor.execute("""
+            UPDATE store_recharge 
+            SET rewardPoints = %s, TimeLeft = %s 
+            WHERE uniqueId = %s
+        """, (new_points, new_time_left_str, unique_id))
         db_connection.commit()
         cursor.close()
 
         return jsonify({
-            "message": f"Reward points redeemed and added to {station_name}.",
-            "uniqueId": unique_id,
-            "newTotalPoints": new_total
+            "message": "Reward redeemed successfully",
+            "remainingPoints": new_points,
+            "newTimeLeft": new_time_left_str
         }), 200
 
     except mysql.connector.Error as e:
@@ -1293,6 +1289,71 @@ def get_user_bottle_history():
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
 
+@app.route('/user/bottle-history/clear/by-email', methods=['POST'])
+def clear_user_bottle_history():
+    try:
+        if not is_mysql_available():
+            return jsonify({"error": "MySQL database not responding"}), 500
+
+        data = request.get_json()
+        email = data.get('email')
+
+        if not email:
+            return jsonify({"error": "Missing required field: 'email'"}), 400
+
+        cursor = get_cursor()
+        if not cursor:
+            return jsonify({"error": "Database connection not available"}), 500
+
+        # Step 1: Get uniqueId from users_recharge by email
+        cursor.execute("SELECT uniqueId FROM users_recharge WHERE email = %s", (email,))
+        user_row = cursor.fetchone()
+
+        if not user_row:
+            cursor.close()
+            return jsonify({"error": "User not found"}), 404
+
+        unique_id = user_row[0]
+
+        # Step 2: Delete all records from bottle_history_recharge by uniqueId
+        cursor.execute("DELETE FROM bottle_history_recharge WHERE uniqueId = %s", (unique_id,))
+        deleted_count = cursor.rowcount
+        db_connection.commit()
+        cursor.close()
+
+        return jsonify({
+            "message": f"{deleted_count} bottle history record(s) cleared for user",
+            "email": email,
+            "uniqueId": unique_id
+        }), 200
+
+    except mysql.connector.Error as e:
+        return handle_mysql_error(e)
+
+@app.route('/user/bottle-history/clear-all', methods=['GET'])
+def clear_all_bottle_history():
+    try:
+        if not is_mysql_available():
+            return jsonify({"error": "MySQL database not responding"}), 500
+
+        cursor = get_cursor()
+        if not cursor:
+            return jsonify({"error": "Database connection not available"}), 500
+
+        # Delete all records from the bottle_history_recharge table
+        cursor.execute("DELETE FROM bottle_history_recharge")
+        deleted_count = cursor.rowcount
+        db_connection.commit()
+        cursor.close()
+
+        return jsonify({
+            "message": f"All bottle history records cleared ({deleted_count} record(s) deleted)"
+        }), 200
+
+    except mysql.connector.Error as e:
+        return handle_mysql_error(e)
+
+
 @app.route('/user/leaderboard', methods=['GET'])
 def get_user_leaderboard_last_7_days():
     try:
@@ -1344,6 +1405,190 @@ def get_user_leaderboard_last_7_days():
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
 
+@app.route('/user/timeleft', methods=['POST'])
+def get_user_timeleft():
+    try:
+        if not is_mysql_available():
+            return jsonify({"error": "MySQL database not responding"}), 500
+
+        data = request.get_json()
+        email = data.get('email')
+
+        if not email:
+            return jsonify({"error": "Missing required field: 'email'"}), 400
+
+        cursor = get_cursor()
+        if not cursor:
+            return jsonify({"error": "Database connection not available"}), 500
+
+        # Step 1: Get uniqueId from users_recharge by email
+        cursor.execute("SELECT uniqueId FROM users_recharge WHERE email = %s", (email,))
+        user_row = cursor.fetchone()
+        if not user_row:
+            cursor.close()
+            return jsonify({"error": "User not found"}), 404
+        unique_id = user_row[0]
+
+        # Step 2: Get TimeLeft from store_recharge by uniqueId
+        cursor.execute("SELECT TimeLeft FROM store_recharge WHERE uniqueId = %s", (unique_id,))
+        store_row = cursor.fetchone()
+        cursor.close()
+        if not store_row:
+            return jsonify({"error": "Store data not found for user"}), 404
+
+        time_left = store_row[0]
+
+        return jsonify({
+            "email": email,
+            "uniqueId": unique_id,
+            "TimeLeft": time_left
+        }), 200
+
+    except mysql.connector.Error as e:
+        return handle_mysql_error(e)
+
+@app.route('/user/notification', methods=['POST'])
+def get_user_notifications():
+    try:
+        if not is_mysql_available():
+            return jsonify({"error": "MySQL database not responding"}), 500
+
+        data = request.get_json()
+        email = data.get('email')
+
+        if not email:
+            return jsonify({"error": "Missing required field: 'email'"}), 400
+
+        cursor = get_cursor()
+        if not cursor:
+            return jsonify({"error": "Database connection not available"}), 500
+
+        # Step 1: Get uniqueId from users_recharge by email
+        cursor.execute("SELECT uniqueId FROM users_recharge WHERE email = %s", (email,))
+        user_row = cursor.fetchone()
+
+        if not user_row:
+            cursor.close()
+            return jsonify({"error": "User not found"}), 404
+
+        unique_id = user_row[0]
+
+        # Step 2: Get all records from notification_recharge by uniqueId
+        cursor.execute("SELECT * FROM notification_recharge WHERE uniqueId = %s", (unique_id,))
+        notifications = cursor.fetchall()
+        cursor.close()
+
+        if not notifications:
+            return jsonify({"message": "No notifications found for this user"}), 404
+
+        notification_list = [{
+            "id": n[0],
+            "uniqueId": n[1],
+            "role": n[2],
+            "status": n[3],
+            "message": n[4],
+            "priority": n[5],
+            "timestamp": n[6]
+        } for n in notifications]
+
+        return jsonify({
+            "email": email,
+            "uniqueId": unique_id,
+            "notifications": notification_list
+        }), 200
+
+    except mysql.connector.Error as e:
+        return handle_mysql_error(e)
+
+@app.route('/user/notification/clear-all', methods=['POST'])
+def clear_user_notifications():
+    try:
+        if not is_mysql_available():
+            return jsonify({"error": "MySQL database not responding"}), 500
+
+        data = request.get_json()
+        email = data.get('email')
+
+        if not email:
+            return jsonify({"error": "Missing required field: 'email'"}), 400
+
+        cursor = get_cursor()
+        if not cursor:
+            return jsonify({"error": "Database connection not available"}), 500
+
+        # Step 1: Get uniqueId from users_recharge by email
+        cursor.execute("SELECT uniqueId FROM users_recharge WHERE email = %s", (email,))
+        user_row = cursor.fetchone()
+
+        if not user_row:
+            cursor.close()
+            return jsonify({"error": "User not found"}), 404
+
+        unique_id = user_row[0]
+
+        # Step 2: Delete all records from notification_recharge by uniqueId
+        cursor.execute("DELETE FROM notification_recharge WHERE uniqueId = %s", (unique_id,))
+        deleted_count = cursor.rowcount
+        db_connection.commit()
+        cursor.close()
+
+        return jsonify({
+            "message": f"{deleted_count} notification(s) cleared for user",
+            "email": email,
+            "uniqueId": unique_id
+        }), 200
+
+    except mysql.connector.Error as e:
+        return handle_mysql_error(e)
+
+@app.route('/user/notification/marked', methods=['POST'])
+def mark_notification_as_read():
+    try:
+        if not is_mysql_available():
+            return jsonify({"error": "MySQL database not responding"}), 500
+
+        data = request.get_json()
+        email = data.get('email')
+        notification_id = data.get('id')
+
+        if not email or not notification_id:
+            return jsonify({"error": "Missing required field: 'email' or 'id'"}), 400
+
+        cursor = get_cursor()
+        if not cursor:
+            return jsonify({"error": "Database connection not available"}), 500
+
+        # Step 1: Get uniqueId from users_recharge by email
+        cursor.execute("SELECT uniqueId FROM users_recharge WHERE email = %s", (email,))
+        user_row = cursor.fetchone()
+
+        if not user_row:
+            cursor.close()
+            return jsonify({"error": "User not found"}), 404
+
+        unique_id = user_row[0]
+
+        # Step 2: Update notification status to 'read'
+        cursor.execute(
+            "UPDATE notification_recharge SET status = %s WHERE uniqueId = %s AND id = %s",
+            ("read", unique_id, notification_id)
+        )
+        db_connection.commit()
+        updated_rows = cursor.rowcount
+        cursor.close()
+
+        if updated_rows == 0:
+            return jsonify({"error": "Notification not found or already marked as read"}), 404
+
+        return jsonify({
+            "message": "Notification marked as read",
+            "email": email,
+            "uniqueId": unique_id,
+            "notificationId": notification_id
+        }), 200
+
+    except mysql.connector.Error as e:
+        return handle_mysql_error(e)
 
 
 @app.route('/admin/total-bottles', methods=['GET'])
@@ -1404,7 +1649,6 @@ def reset_all_bottle_counts():
 
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
-
 
 @app.route('/admin/set-state-machine', methods=['POST'])
 def set_station_state_machine():
@@ -1478,7 +1722,71 @@ def get_all_stations():
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
 
+## insert bottle without history
+# @app.route('/esp/insert-bottle', methods=['POST'])
+# def insert_bottle_from_station():
+#     try:
+#         if not is_mysql_available():
+#             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
 
+#         data = request.get_json()
+#         station_name = data.get('stationName')
+
+#         if not station_name:
+#             return jsonify({"error": "Missing required field: 'stationName'"}), 400
+
+#         cursor = get_cursor()
+#         if cursor:
+#             # Step 1: Get uniqueId by stationName
+#             cursor.execute("SELECT uniqueId FROM station_recharge WHERE stationName = %s LIMIT 1", (station_name,))
+#             result = cursor.fetchone()
+
+#             if not result:
+#                 cursor.close()
+#                 return jsonify({"error": f"No station found with name '{station_name}'"}), 404
+
+#             unique_id = result[0]
+
+#             # Step 2: Determine the column to update
+#             column_to_update = None
+#             if station_name == "Station1":
+#                 column_to_update = "station1BottleCount"
+#             elif station_name == "Station2":
+#                 column_to_update = "station2BottleCount"
+#             elif station_name == "Station3":
+#                 column_to_update = "station3BottleCount"
+#             else:
+#                 cursor.close()
+#                 return jsonify({"error": f"Invalid station name: '{station_name}'"}), 400
+
+#             # Step 3: Increment the correct bottle count and rewardPoints
+#             update_query = f"""
+#                 UPDATE store_recharge
+#                 SET 
+#                     {column_to_update} = CAST(COALESCE({column_to_update}, '0') AS UNSIGNED) + 1,
+#                     rewardPoints = CAST(COALESCE(rewardPoints, '0') AS UNSIGNED) + 1
+#                 WHERE uniqueId = %s
+#             """
+#             cursor.execute(update_query, (unique_id,))
+#             db_connection.commit()
+
+#             if cursor.rowcount == 0:
+#                 cursor.close()
+#                 return jsonify({"error": "No matching store record found for uniqueId"}), 404
+
+#             cursor.close()
+#             return jsonify({
+#                 "message": f"1 bottle inserted into {station_name}, rewardPoints incremented",
+#                 "stationName": station_name,
+#                 "uniqueId": unique_id
+#             }), 200
+#         else:
+#             return jsonify({"error": "Database connection not available"}), 500
+
+#     except mysql.connector.Error as e:
+#         return handle_mysql_error(e)
+
+## insert bottle with history
 @app.route('/esp/insert-bottle', methods=['POST'])
 def insert_bottle_from_station():
     try:
@@ -1515,10 +1823,12 @@ def insert_bottle_from_station():
                 cursor.close()
                 return jsonify({"error": f"Invalid station name: '{station_name}'"}), 400
 
-            # Step 3: Increment the correct column
+            # Step 3: Increment bottle count and rewardPoints
             update_query = f"""
                 UPDATE store_recharge
-                SET {column_to_update} = CAST(COALESCE({column_to_update}, '0') AS UNSIGNED) + 1
+                SET 
+                    {column_to_update} = CAST(COALESCE({column_to_update}, '0') AS UNSIGNED) + 1,
+                    rewardPoints = CAST(COALESCE(rewardPoints, '0') AS UNSIGNED) + 1
                 WHERE uniqueId = %s
             """
             cursor.execute(update_query, (unique_id,))
@@ -1528,15 +1838,252 @@ def insert_bottle_from_station():
                 cursor.close()
                 return jsonify({"error": "No matching store record found for uniqueId"}), 404
 
+            # Step 4: Insert bottle history
+            history_insert_query = """
+                INSERT INTO bottle_history_recharge (uniqueId, bottleCount, bottleNotes, fromStation, bottleStatus)
+                VALUES (%s, %s, %s, %s, %s)
+            """
+            history_data = (unique_id, '1', 'Inserted via ESP', station_name, 'completed')
+            cursor.execute(history_insert_query, history_data)
+            db_connection.commit()
+
             cursor.close()
             return jsonify({
-                "message": f"1 bottle inserted into {station_name}",
+                "message": f"1 bottle inserted into {station_name}, rewardPoints incremented, history logged",
                 "stationName": station_name,
                 "uniqueId": unique_id
             }), 200
+
         else:
             return jsonify({"error": "Database connection not available"}), 500
 
+    except mysql.connector.Error as e:
+        return handle_mysql_error(e)
+
+@app.route('/esp/run/timeleft', methods=['POST'])
+def reset_user_run_timeleft():
+    try:
+        if not is_mysql_available():
+            return jsonify({"error": "MySQL database not responding"}), 500
+
+        data = request.get_json()
+        email = data.get('email')
+
+        if not email:
+            return jsonify({"error": "Missing required field: 'email'"}), 400
+
+        cursor = get_cursor()
+        if not cursor:
+            return jsonify({"error": "Database connection not available"}), 500
+
+        # Step 1: Get uniqueId from users_recharge by email
+        cursor.execute("SELECT uniqueId FROM users_recharge WHERE email = %s", (email,))
+        user_row = cursor.fetchone()
+        if not user_row:
+            cursor.close()
+            return jsonify({"error": "User not found"}), 404
+        unique_id = user_row[0]
+
+        # Step 2: Get TimeLeft from store_recharge by uniqueId
+        cursor.execute("SELECT TimeLeft FROM store_recharge WHERE uniqueId = %s", (unique_id,))
+        store_row = cursor.fetchone()
+        if not store_row:
+            cursor.close()
+            return jsonify({"error": "Store data not found for user"}), 404
+        original_time_left = store_row[0]
+
+        # Step 3: Set TimeLeft to "00:00:00"
+        cursor.execute(
+            "UPDATE store_recharge SET TimeLeft = %s WHERE uniqueId = %s",
+            ("00:00:00", unique_id)
+        )
+        db_connection.commit()
+        cursor.close()
+
+        return jsonify({
+            "message": "TimeLeft has been reset to 00:00:00",
+            "email": email,
+            "uniqueId": unique_id,
+            "previousTimeLeft": original_time_left,
+            "newTimeLeft": "00:00:00"
+        }), 200
+
+    except mysql.connector.Error as e:
+        return handle_mysql_error(e)
+
+@app.route('/esp/check/timeleft', methods=['POST'])
+def get_user_check_timeleft():
+    try:
+        if not is_mysql_available():
+            return jsonify({"error": "MySQL database not responding"}), 500
+
+        data = request.get_json()
+        email = data.get('email')
+
+        if not email:
+            return jsonify({"error": "Missing required field: 'email'"}), 400
+
+        cursor = get_cursor()
+        if not cursor:
+            return jsonify({"error": "Database connection not available"}), 500
+
+        # Step 1: Get uniqueId from users_recharge by email
+        cursor.execute("SELECT uniqueId FROM users_recharge WHERE email = %s", (email,))
+        user_row = cursor.fetchone()
+        if not user_row:
+            cursor.close()
+            return jsonify({"error": "User not found"}), 404
+        unique_id = user_row[0]
+
+        # Step 2: Get TimeLeft from store_recharge by uniqueId
+        cursor.execute("SELECT TimeLeft FROM store_recharge WHERE uniqueId = %s", (unique_id,))
+        store_row = cursor.fetchone()
+        cursor.close()
+        if not store_row:
+            return jsonify({"error": "Store data not found for user"}), 404
+
+        time_left = store_row[0]
+
+        return jsonify({
+            "email": email,
+            "uniqueId": unique_id,
+            "TimeLeft": time_left
+        }), 200
+
+    except mysql.connector.Error as e:
+        return handle_mysql_error(e)
+
+
+
+@app.route('/table/recharge/users', methods=['GET'])
+def show_users_recharge():
+    try:
+        if not is_mysql_available():
+            return jsonify({"error": "MySQL database not responding"}), 500
+        cursor = get_cursor()
+        if cursor:
+            cursor.execute("SELECT * FROM users_recharge")
+            records = cursor.fetchall()
+            users_list = [{
+                "id": r[0], "uniqueId": r[1], "userName": r[2], "passwordHash": r[3],
+                "role": r[4], "groupId": r[5], "email": r[6], "status": r[7],
+                "token": r[8], "resetCode": r[9], "timestamp": r[10]
+            } for r in records]
+            cursor.close()
+            return jsonify({"users_recharge": users_list}), 200 if users_list else 404
+    except mysql.connector.Error as e:
+        return handle_mysql_error(e)
+
+@app.route('/table/recharge/profile', methods=['GET'])
+def show_profile_recharge():
+    try:
+        if not is_mysql_available():
+            return jsonify({"error": "MySQL database not responding"}), 500
+        cursor = get_cursor()
+        if cursor:
+            cursor.execute("SELECT * FROM profile_recharge")
+            records = cursor.fetchall()
+            profile_list = [{
+                "id": r[0], "uniqueId": r[1], "firstName": r[2], "lastName": r[3],
+                "suffix": r[4], "contactNumber": r[5], "email": r[6], "address": r[7],
+                "birthday": r[8], "photoURL": r[9], "timestamp": r[10]
+            } for r in records]
+            cursor.close()
+            return jsonify({"profile_recharge": profile_list}), 200 if profile_list else 404
+    except mysql.connector.Error as e:
+        return handle_mysql_error(e)
+
+@app.route('/table/recharge/station', methods=['GET'])
+def show_station_recharge():
+    try:
+        if not is_mysql_available():
+            return jsonify({"error": "MySQL database not responding"}), 500
+        cursor = get_cursor()
+        if cursor:
+            cursor.execute("SELECT * FROM station_recharge")
+            records = cursor.fetchall()
+            station_list = [{
+                "id": r[0], "uniqueId": r[1], "stationName": r[2],
+                "stationStatus": r[3], "timestamp": r[4]
+            } for r in records]
+            cursor.close()
+            return jsonify({"station_recharge": station_list}), 200 if station_list else 404
+    except mysql.connector.Error as e:
+        return handle_mysql_error(e)
+
+@app.route('/table/recharge/store', methods=['GET'])
+def show_store_recharge():
+    try:
+        if not is_mysql_available():
+            return jsonify({"error": "MySQL database not responding"}), 500
+        cursor = get_cursor()
+        if cursor:
+            cursor.execute("SELECT * FROM store_recharge")
+            records = cursor.fetchall()
+            store_list = [{
+                "id": r[0], "uniqueId": r[1], "station1BottleCount": r[2],
+                "station2BottleCount": r[3], "station3BottleCount": r[4],
+                "rewardPoints": r[5], "TimeLeft": r[6], "timestamp": r[7]
+            } for r in records]
+            cursor.close()
+            return jsonify({"store_recharge": store_list}), 200 if store_list else 404
+    except mysql.connector.Error as e:
+        return handle_mysql_error(e)
+
+@app.route('/table/recharge/rewards', methods=['GET'])
+def show_rewards_recharge():
+    try:
+        if not is_mysql_available():
+            return jsonify({"error": "MySQL database not responding"}), 500
+        cursor = get_cursor()
+        if cursor:
+            cursor.execute("SELECT * FROM rewards_recharge")
+            records = cursor.fetchall()
+            reward_list = [{
+                "id": r[0], "uniqueId": r[1], "rewardId": r[2],
+                "rewardName": r[3], "rewardTime": r[4],
+                "rewardCost": r[5], "timestamp": r[6]
+            } for r in records]
+            cursor.close()
+            return jsonify({"rewards_recharge": reward_list}), 200 if reward_list else 404
+    except mysql.connector.Error as e:
+        return handle_mysql_error(e)
+
+@app.route('/table/recharge/bottle-history', methods=['GET'])
+def show_bottle_history_recharge():
+    try:
+        if not is_mysql_available():
+            return jsonify({"error": "MySQL database not responding"}), 500
+        cursor = get_cursor()
+        if cursor:
+            cursor.execute("SELECT * FROM bottle_history_recharge")
+            records = cursor.fetchall()
+            bottle_list = [{
+                "id": r[0], "uniqueId": r[1], "bottleCount": r[2],
+                "bottleNotes": r[3], "fromStation": r[4],
+                "bottleStatus": r[5], "timestamp": r[6]
+            } for r in records]
+            cursor.close()
+            return jsonify({"bottle_history_recharge": bottle_list}), 200 if bottle_list else 404
+    except mysql.connector.Error as e:
+        return handle_mysql_error(e)
+
+@app.route('/table/recharge/notification', methods=['GET'])
+def show_notification_recharge():
+    try:
+        if not is_mysql_available():
+            return jsonify({"error": "MySQL database not responding"}), 500
+        cursor = get_cursor()
+        if cursor:
+            cursor.execute("SELECT * FROM notification_recharge")
+            records = cursor.fetchall()
+            notification_list = [{
+                "id": r[0], "uniqueId": r[1], "role": r[2],
+                "status": r[3], "message": r[4],
+                "priority": r[5], "timestamp": r[6]
+            } for r in records]
+            cursor.close()
+            return jsonify({"notification_recharge": notification_list}), 200 if notification_list else 404
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
 
@@ -1574,20 +2121,7 @@ else:
 # def index():
 #     return jsonify({"message": "Welcome to the appfinity API"})
 
-@app.route("/ui")
-def ui():
-    # Render the HTML template for the /ui route
-    return render_template("index.html")
 
-@app.route("/history")
-def history():
-    # Render the HTML template for the /history route
-    return render_template("history.html")
-
-@app.route("/history-preview")
-def history_preview():
-    # Render the HTML template for the /history route
-    return render_template("history-preview.html")
 
 if __name__ == '__main__':
     app.run(debug=True)
