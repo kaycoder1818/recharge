@@ -1726,8 +1726,8 @@ def get_all_stations():
 
         cursor = get_cursor()
         if cursor:
-            # Fetch all records from the 'store_recharge' table
-            cursor.execute("SELECT * FROM store_recharge")
+            # Fetch all records from the 'station_recharge' table
+            cursor.execute("SELECT * FROM station_recharge")
             records = cursor.fetchall()
 
             # Check if there are records
@@ -1747,7 +1747,7 @@ def get_all_stations():
                 return jsonify({"stations": stations_list}), 200
             else:
                 cursor.close()
-                return jsonify({"message": "No records found in 'store_recharge' table"}), 404
+                return jsonify({"message": "No records found in 'station_recharge' table"}), 404
         else:
             return jsonify({"error": "Database connection not available"}), 500
 
