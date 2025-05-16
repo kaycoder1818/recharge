@@ -628,7 +628,7 @@ def insert_mockup_store_recharge():
                     station1BottleCount, station2BottleCount, station3BottleCount,
                     rewardPoints,
                     TimeLeft
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ) VALUES (%s, %s, %s, %s, %s, %s)
             """
             data = (
                 "1234",
