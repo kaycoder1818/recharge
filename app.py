@@ -781,7 +781,7 @@ def generate_unique_value_for_column(cursor, column_name):
 
 # Show all records from the 'users_recharge' table
 @app.route('/user', methods=['GET'])
-def show_users_recharge():
+def get_users_recharge():
     try:
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
