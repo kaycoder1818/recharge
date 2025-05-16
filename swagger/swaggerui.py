@@ -23,7 +23,7 @@ def setup_swagger(app):
         "swagger": "2.0",
         "info": {
             "title": "API Documentation",
-            "description": "ParcelPoint API",
+            "description": "Recharge API",
             "version": "1.0",
         },
         "paths": swagger_docs
