@@ -123,11 +123,7 @@ def handle_mysql_error(e):
     print(f"MySQL Error: {e}")
     return jsonify({"error": "MySQL database operation failed. Please check the database connection."}), 500
 
-# Initial list of fields
-field_db = [
-    ["app_status", "idle"],
-    ["app_timestamp", "idle"],
-]
+
 
 ##✅ ------ create table users_recharge ---------------- ##
 @app.route('/create-table-users-recharge', methods=['GET'])
@@ -957,6 +953,41 @@ def delete_user_by_email():
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
 
+@app.route('/user/verify', methods=['GET'])
+def verify_user_by_token():
+    try:
+        if not is_mysql_available():
+            return jsonify({"error": "MySQL database not responding"}), 500
+
+        token = request.args.get('token')
+        if not token:
+            return jsonify({"error": "Missing required query parameter: 'token'"}), 400
+
+        cursor = get_cursor()
+        if not cursor:
+            return jsonify({"error": "Database connection not available"}), 500
+
+        # Check if user with the token exists
+        cursor.execute("SELECT id FROM users_recharge WHERE token = %s", (token,))
+        user = cursor.fetchone()
+
+        if not user:
+            cursor.close()
+            return jsonify({"error": "Invalid or expired token"}), 404
+
+        # Update user status to 'verified'
+        cursor.execute("UPDATE users_recharge SET status = %s WHERE token = %s", ("verified", token))
+        db_connection.commit()
+        cursor.close()
+
+        return jsonify({
+            "message": "User successfully verified",
+            "token": token
+        }), 200
+
+    except mysql.connector.Error as e:
+        return handle_mysql_error(e)
+
 @app.route('/user/assign-machine', methods=['POST'])
 def assign_station_to_user():
     try:
@@ -1353,7 +1384,6 @@ def clear_all_bottle_history():
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
 
-
 @app.route('/user/leaderboard', methods=['GET'])
 def get_user_leaderboard_last_7_days():
     try:
@@ -1716,6 +1746,71 @@ def get_all_stations():
             else:
                 cursor.close()
                 return jsonify({"message": "No records found in 'store_recharge' table"}), 404
+        else:
+            return jsonify({"error": "Database connection not available"}), 500
+
+    except mysql.connector.Error as e:
+        return handle_mysql_error(e)
+
+@app.route('/admin/add-reward', methods=['POST'])
+def add_reward():
+    try:
+        if not is_mysql_available():
+            return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
+
+        data = request.get_json()
+
+        # Set default uniqueId to '1234' if not provided in the request
+        uniqueId = data.get('uniqueId', '1234')
+
+        # Validate input data
+        if not data or not all(key in data for key in ['rewardId', 'rewardName', 'rewardTime', 'rewardCost']):
+            return jsonify({"error": "Missing required fields"}), 400
+
+        rewardId = data['rewardId']
+        rewardName = data['rewardName']
+        rewardTime = data['rewardTime']
+        rewardCost = data['rewardCost']
+
+        cursor = get_cursor()
+        if cursor:
+            # Insert the provided data into 'rewards_recharge' table
+            sql_insert = """
+            INSERT INTO rewards_recharge (uniqueId, rewardId, rewardName, rewardTime, rewardCost)
+            VALUES (%s, %s, %s, %s, %s)
+            """
+            cursor.execute(sql_insert, (uniqueId, rewardId, rewardName, rewardTime, rewardCost))
+            db_connection.commit()
+            cursor.close()
+            return jsonify({"message": "Reward added successfully"}), 200
+        else:
+            return jsonify({"error": "Database connection not available"}), 500
+
+    except mysql.connector.Error as e:
+        return handle_mysql_error(e)
+
+@app.route('/admin/delete-reward/<int:id>', methods=['DELETE'])
+def delete_reward(id):
+    try:
+        if not is_mysql_available():
+            return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
+
+        cursor = get_cursor()
+        if cursor:
+            # Delete the record from 'rewards_recharge' table where the ID matches
+            sql_delete = """
+            DELETE FROM rewards_recharge WHERE id = %s
+            """
+            cursor.execute(sql_delete, (id,))
+            db_connection.commit()
+
+            # Check if the record was deleted
+            if cursor.rowcount > 0:
+                cursor.close()
+                return jsonify({"message": f"Reward with id {id} deleted successfully"}), 200
+            else:
+                cursor.close()
+                return jsonify({"error": f"Reward with id {id} not found"}), 404
         else:
             return jsonify({"error": "Database connection not available"}), 500
 
