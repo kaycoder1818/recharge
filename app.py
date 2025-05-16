@@ -402,6 +402,8 @@ def create_notification_recharge_table():
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
 
+
+
 ##✅ ------ delete table users_recharge ---------------- ##
 @app.route('/delete-table-users-recharge', methods=['GET'])
 def delete_users_recharge_table():
@@ -516,20 +518,20 @@ def delete_bottle_history_recharge_table():
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
 
-##✅ ------ delete table bottle_history_recharge ---------------- ##
-@app.route('/delete-table-bottle-history-recharge', methods=['GET'])
-def delete_bottle_history_recharge_table():
+##✅ ------ delete table notification_recharge ---------------- ##
+@app.route('/delete-table-notification-recharge', methods=['GET'])
+def delete_notification_recharge_table():
     try:
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
         
         cursor = get_cursor()
         if cursor:
-            # Drop the 'bottle_history_recharge' table
-            cursor.execute("DROP TABLE IF EXISTS bottle_history_recharge")
+            # Drop the 'notification_recharge' table
+            cursor.execute("DROP TABLE IF EXISTS notification_recharge")
             db_connection.commit()
             cursor.close()
-            return jsonify({"message": "Table 'bottle_history_recharge' deleted successfully"}), 200
+            return jsonify({"message": "Table 'notification_recharge' deleted successfully"}), 200
         else:
             return jsonify({"error": "Database connection not available"}), 500
     except mysql.connector.Error as e:
