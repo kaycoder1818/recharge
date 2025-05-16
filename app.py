@@ -823,6 +823,60 @@ def get_users_recharge():
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
 
+# @app.route('/user/add', methods=['POST'])
+# def add_user_to_users_recharge():
+#     try:
+#         if not is_mysql_available():
+#             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
+
+#         data = request.get_json()
+#         userName = data.get('userName')
+#         passwordHash = data.get('passwordHash')
+#         role = data.get('role')
+#         groupId = data.get('groupId')
+#         email = data.get('email')
+#         status = data.get('status')
+
+#         if not userName or not passwordHash or not email:
+#             return jsonify({"error": "Missing required fields: 'userName', 'passwordHash', or 'email'"}), 400
+
+#         cursor = get_cursor()
+#         if cursor:
+#             # Check for existing userName or email
+#             cursor.execute("""
+#                 SELECT id FROM users_recharge WHERE userName = %s OR email = %s LIMIT 1
+#             """, (userName, email))
+#             if cursor.fetchone():
+#                 cursor.close()
+#                 return jsonify({"error": "Username or email already exists"}), 409
+
+#             # Generate unique values
+#             unique_id = generate_unique_value_for_column(cursor, "uniqueId")
+#             reset_code = generate_unique_value_for_column(cursor, "resetCode")
+#             token = generate_unique_value_for_column(cursor, "token")
+
+#             # Insert new user
+#             insert_query = """
+#             INSERT INTO users_recharge (uniqueId, userName, passwordHash, role, groupId, email, status, token, resetCode)
+#             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+#             """
+#             insert_data = (unique_id, userName, passwordHash, role, groupId, email, status, token, reset_code)
+#             cursor.execute(insert_query, insert_data)
+#             db_connection.commit()
+#             cursor.close()
+
+#             return jsonify({
+#                 "message": "User created successfully",
+#                 "uniqueId": unique_id,
+#                 "token": token,
+#                 "resetCode": reset_code
+#             }), 201
+#         else:
+#             return jsonify({"error": "Database connection not available"}), 500
+
+#     except mysql.connector.Error as e:
+#         return handle_mysql_error(e)
+
 @app.route('/user/add', methods=['POST'])
 def add_user_to_users_recharge():
     try:
@@ -862,6 +916,24 @@ def add_user_to_users_recharge():
             """
             insert_data = (unique_id, userName, passwordHash, role, groupId, email, status, token, reset_code)
             cursor.execute(insert_query, insert_data)
+            db_connection.commit()
+
+            # Insert a new record in the store_recharge table
+            sql_insert_store = """
+            INSERT INTO store_recharge (
+                uniqueId, 
+                station1BottleCount, station2BottleCount, station3BottleCount,
+                rewardPoints,
+                TimeLeft
+            ) VALUES (%s, %s, %s, %s, %s, %s)
+            """
+            store_data = (
+                unique_id,  # uniqueId from the user just created
+                "0", "0", "0",  # bottle counts
+                "0",  # points
+                "00:00:00"  # time left
+            )
+            cursor.execute(sql_insert_store, store_data)
             db_connection.commit()
             cursor.close()
 
@@ -921,6 +993,40 @@ def edit_user_recharge():
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
 
+# @app.route('/user/delete', methods=['DELETE'])
+# def delete_user_by_email():
+#     try:
+#         if not is_mysql_available():
+#             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
+
+#         data = request.get_json()
+#         email = data.get('email')
+
+#         if not email:
+#             return jsonify({"error": "Missing required field: 'email'"}), 400
+
+#         cursor = get_cursor()
+#         if cursor:
+#             # Check if user exists
+#             cursor.execute("SELECT id FROM users_recharge WHERE email = %s LIMIT 1", (email,))
+#             user = cursor.fetchone()
+
+#             if not user:
+#                 cursor.close()
+#                 return jsonify({"error": "User not found with the provided email"}), 404
+
+#             # Delete user
+#             cursor.execute("DELETE FROM users_recharge WHERE email = %s", (email,))
+#             db_connection.commit()
+#             cursor.close()
+
+#             return jsonify({"message": f"User with email '{email}' deleted successfully"}), 200
+#         else:
+#             return jsonify({"error": "Database connection not available"}), 500
+
+#     except mysql.connector.Error as e:
+#         return handle_mysql_error(e)
+
 @app.route('/user/delete', methods=['DELETE'])
 def delete_user_by_email():
     try:
@@ -936,24 +1042,31 @@ def delete_user_by_email():
         cursor = get_cursor()
         if cursor:
             # Check if user exists
-            cursor.execute("SELECT id FROM users_recharge WHERE email = %s LIMIT 1", (email,))
+            cursor.execute("SELECT id, uniqueId FROM users_recharge WHERE email = %s LIMIT 1", (email,))
             user = cursor.fetchone()
 
             if not user:
                 cursor.close()
                 return jsonify({"error": "User not found with the provided email"}), 404
 
-            # Delete user
+            unique_id = user['uniqueId']
+
+            # Delete the corresponding record from store_recharge by uniqueId
+            cursor.execute("DELETE FROM store_recharge WHERE uniqueId = %s", (unique_id,))
+            db_connection.commit()
+
+            # Delete user from users_recharge
             cursor.execute("DELETE FROM users_recharge WHERE email = %s", (email,))
             db_connection.commit()
             cursor.close()
 
-            return jsonify({"message": f"User with email '{email}' deleted successfully"}), 200
+            return jsonify({"message": f"User with email '{email}' and related store_recharge record deleted successfully"}), 200
         else:
             return jsonify({"error": "Database connection not available"}), 500
 
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
+
 
 @app.route('/user/verify', methods=['GET'])
 def verify_user_by_token():

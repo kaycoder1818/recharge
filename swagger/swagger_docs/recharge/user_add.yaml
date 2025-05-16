@@ -1,7 +1,7 @@
 /user/add:
   post:
     summary: "Add a New User to users_recharge"
-    description: "Creates a new user in the 'users_recharge' table. Requires 'userName', 'passwordHash', and 'email'. Checks for duplicate username/email and database availability, and generates 'uniqueId', 'token', and 'resetCode'."
+    description: "Creates a new user in the 'users_recharge' table. Requires 'userName', 'passwordHash', and 'email'. Checks for duplicate username/email and database availability, and generates 'uniqueId', 'token', and 'resetCode'. Additionally, creates a corresponding entry in the 'store_recharge' table with default values for the user."
     tags: ["User"]
     parameters:
       - name: "body"
