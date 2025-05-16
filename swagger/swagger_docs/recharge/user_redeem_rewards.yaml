@@ -15,9 +15,9 @@
               description: "Email of the user redeeming the reward"
               example: "user@example.com"
             rewardId:
-              type: "integer"
+              type: "string"
               description: "ID of the reward being redeemed"
-              example: 101
+              example: "ADD15"
           required:
             - email
             - rewardId
