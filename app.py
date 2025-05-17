@@ -2358,10 +2358,6 @@ else:
 def register_page():
     return render_template("register.html")
 
-@app.route("/user-dashboard")
-def user_dashboard_page():
-    return render_template("user_dashboard.html")
-
 @app.route("/history")
 def history_page():
     return render_template("history.html")
@@ -2373,6 +2369,10 @@ def rewards_page():
 @app.route("/leaderboards")
 def leaderboards_page():
     return render_template("leaderboards.html")
+    
+@app.route("/user-dashboard")
+def user_dashboard_page():
+    return render_template("user_dashboard.html")
 
 @app.route("/admin-dashboard")
 def admin_dashboard_page():
@@ -2382,9 +2382,7 @@ def admin_dashboard_page():
 def superadmin_dashboard_page():
     return render_template("superadmin_dashboard.html")
 
-@app.route("/user-dashboard")
-def user_dashboard_page():
-    return render_template("user_dashboard.html")
+
 
 
 
