@@ -1528,15 +1528,17 @@ def get_user_leaderboard_last_7_days():
             cursor.close()
             return jsonify({"message": "No bottle activity found in the last 7 days"}), 404
 
-        # Step 2: Map uniqueId to email
+        # Step 2: Map uniqueId to userName and email
         leaderboard = []
         for unique_id, total_bottles in store_totals:
-            cursor.execute("SELECT email FROM users_recharge WHERE uniqueId = %s LIMIT 1", (unique_id,))
+            cursor.execute("SELECT userName, email FROM users_recharge WHERE uniqueId = %s LIMIT 1", (unique_id,))
             user = cursor.fetchone()
             if user:
+                user_name, email = user
                 leaderboard.append({
                     "uniqueId": unique_id,
-                    "email": user[0],
+                    "userName": user_name,
+                    "email": email,
                     "totalBottles": total_bottles
                 })
 
@@ -1549,6 +1551,7 @@ def get_user_leaderboard_last_7_days():
 
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
+
 
 @app.route('/user/timeleft', methods=['POST'])
 def get_user_timeleft():
