@@ -1,4 +1,4 @@
-import { API_BASE_URL } from './config.js';
+import { API_BASE_URL } from 'config.js';
 
 // Function to show notifications
 function showNotification(message, type = 'info') {

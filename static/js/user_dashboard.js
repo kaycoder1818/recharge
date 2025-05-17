@@ -1,4 +1,4 @@
-import { API_BASE_URL } from './config.js';
+import { API_BASE_URL } from 'config.js';
 
 const stationCard = document.getElementById('stationCard');
 const modal = document.getElementById('stationModal');
