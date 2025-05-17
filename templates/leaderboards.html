@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/x-icon" href="assets/ReChargeLOGO (2).ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboards - ReCharge</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="userdashboard.css">
+    <link rel="stylesheet" href="leaderboards.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Hamburger Menu Button -->
+    <button class="hamburger-menu" id="hamburgerBtn">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <img src="assets/ReChargeLOGO (2).png" alt="Logo" class="sidebar-logo">
+            <button class="close-sidebar" id="closeSidebarBtn">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="user_dashboard.html" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a href="history.html" class="nav-item">
+                <i class="fas fa-history"></i>
+                <span>History</span>
+            </a>
+            <a href="rewards.html" class="nav-item">
+                <i class="fas fa-gift"></i>
+                <span>Rewards</span>
+            </a>
+            <a href="leaderboards.html" class="nav-item active">
+                <i class="fas fa-trophy"></i>
+                <span>Leaderboards</span>
+            </a>
+            <a href="#" id="logout_btn" class="nav-item logout">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Overlay for mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <main class="dashboard-container">
+            <div class="leaderboards-header">
+                <h1>7-Day Leaderboard</h1>
+                <div class="date-range" id="dateRange">
+                    <!-- Date range will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Leaderboard Table -->
+            <div class="leaderboard-container">
+                <div class="leaderboard-table">
+                    <div class="table-header">
+                        <div class="rank-col">Rank</div>
+                        <div class="user-col">User</div>
+                        <div class="bottles-col">Bottles</div>
+                    </div>
+                    <div class="table-body" id="leaderboardBody">
+                        <!-- Leaderboard entries will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Your Position -->
+            <div class="your-position" id="yourPosition">
+                <!-- User's position will be shown here -->
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="./auth.js"></script>
+    <script src="./leaderboards.js"></script>
+</body>
+</html> 

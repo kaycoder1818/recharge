@@ -2328,11 +2328,63 @@ else:
     # Execute this route if "dev" exists
     @app.route('/', methods=['GET'])
     def index():
-        return jsonify({"message": "Welcome to the recharge API"})
+        # return jsonify({"message": "Welcome to the recharge API"})
+        # Render the HTML template for the /ui route
+        return render_template("index.html")
 
 # @app.route('/', methods=['GET'])
 # def index():
 #     return jsonify({"message": "Welcome to the recharge API"})
+
+
+# @app.route("/ui")
+# def ui():
+#     # Render the HTML template for the /ui route
+#     return render_template("index.html")
+
+# @app.route("/history")
+# def history():
+#     # Render the HTML template for the /history route
+#     return render_template("history.html")
+
+# @app.route("/history-preview")
+# def history_preview():
+#     # Render the HTML template for the /history route
+#     return render_template("history-preview.html")
+
+
+
+@app.route("/register")
+def register_page():
+    return render_template("register.html")
+
+@app.route("/user-dashboard")
+def user_dashboard_page():
+    return render_template("user_dashboard.html")
+
+@app.route("/history")
+def history_page():
+    return render_template("history.html")
+
+@app.route("/rewards")
+def rewards_page():
+    return render_template("rewards.html")
+
+@app.route("/leaderboards")
+def leaderboards_page():
+    return render_template("leaderboards.html")
+
+@app.route("/admin-dashboard")
+def admin_dashboard_page():
+    return render_template("admin_dashboard.html")
+
+@app.route("/superadmin-dashboard")
+def superadmin_dashboard_page():
+    return render_template("superadmin_dashboard.html")
+
+@app.route("/user-dashboard")
+def user_dashboard_page():
+    return render_template("user_dashboard.html")
 
 
 
