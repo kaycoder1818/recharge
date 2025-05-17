@@ -2328,11 +2328,11 @@ else:
     # Execute this route if "dev" exists
     @app.route('/', methods=['GET'])
     def index():
-        return jsonify({"message": "Welcome to the parcelpoint API"})
+        return jsonify({"message": "Welcome to the recharge API"})
 
 # @app.route('/', methods=['GET'])
 # def index():
-#     return jsonify({"message": "Welcome to the appfinity API"})
+#     return jsonify({"message": "Welcome to the recharge API"})
 
 
 
