@@ -1,4 +1,6 @@
-import { API_BASE_URL } from 'config.js';
+// import { API_BASE_URL } from 'config.js';
+const API_BASE_URL = 'https://recharge-ashen.vercel.app';
+
 
 // Function to show notifications
 function showNotification(message, type = 'info') {

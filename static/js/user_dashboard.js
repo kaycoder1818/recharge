@@ -1,4 +1,5 @@
-import { API_BASE_URL } from 'config.js';
+// import { API_BASE_URL } from 'config.js';
+const API_BASE_URL = 'https://recharge-ashen.vercel.app';
 
 const stationCard = document.getElementById('stationCard');
 const modal = document.getElementById('stationModal');

@@ -1,4 +1,5 @@
-import { API_BASE_URL } from 'config.js';
+// import { API_BASE_URL } from 'config.js';
+const API_BASE_URL = 'https://recharge-ashen.vercel.app';
 
 // DOM Elements
 const sidebar = document.getElementById('sidebar');
