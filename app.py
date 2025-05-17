@@ -2315,13 +2315,14 @@ if not os.path.exists('dev'):
     @app.route('/', methods=['GET'])
     def index():
         if is_mysql_available():
-            return jsonify({
-                "message": {
-                    "status": "ok",
-                    "developer": "kayven",
-                    "email": "yvendee2020@gmail.com"
-                }
-            })
+            # return jsonify({
+            #     "message": {
+            #         "status": "ok",
+            #         "developer": "kayven",
+            #         "email": "yvendee2020@gmail.com"
+            #     }
+            # })
+            return render_template("index.html")
         else:
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
 else:
@@ -2369,7 +2370,7 @@ def rewards_page():
 @app.route("/leaderboards")
 def leaderboards_page():
     return render_template("leaderboards.html")
-    
+
 @app.route("/user-dashboard")
 def user_dashboard_page():
     return render_template("user_dashboard.html")
