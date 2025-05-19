@@ -1,165 +1,22 @@
 from flask import Flask, jsonify, request, render_template
+# from dotenv import load_dotenv
 import mysql.connector
-from mysql.connector import pooling
 import os
 from swagger.swaggerui import setup_swagger
 import random
 import string
 from datetime import datetime, timedelta
-import time
-import threading
+
+
 
 app = Flask(__name__, template_folder='templates', static_folder='static', static_url_path='/static')
 
 # Set up Swagger
 setup_swagger(app)
 
-# Global connection pool
-db_pool = None
-MAX_RETRIES = 3
-RETRY_DELAY = 2  # seconds
-POOL_SIZE = 5
-CONNECTION_TIMEOUT = 10
-POOL_NAME = "mypool"
-POOL_LOCK = threading.Lock()
+# Load environment variables from .env file
+# load_dotenv()
 
-def initialize_db_pool():
-    global db_pool
-    try:
-        mysql_details = os.getenv('MYSQL_DETAILS')
-        if not mysql_details:
-            print("MYSQL_DETAILS environment variable is not set.")
-            return False
-
-        # Split the details by "@"
-        details = mysql_details.split('@')
-        if len(details) != 5:
-            print("Invalid MYSQL_DETAILS format")
-            return False
-
-        # Extract the individual values
-        host = details[0]
-        user = details[1]
-        password = details[2]
-        database = details[3]
-        port = int(details[4])
-
-        # Configure the connection pool
-        dbconfig = {
-            "host": host,
-            "user": user,
-            "password": password,
-            "database": database,
-            "port": port,
-            "pool_name": POOL_NAME,
-            "pool_size": POOL_SIZE,
-            "connect_timeout": CONNECTION_TIMEOUT,
-            "use_pure": True,
-            "autocommit": True,
-            "get_warnings": True,
-            "raise_on_warnings": True,
-            "connection_timeout": CONNECTION_TIMEOUT,
-            "pool_reset_session": True
-        }
-
-        with POOL_LOCK:
-            if db_pool is None:
-                db_pool = mysql.connector.pooling.MySQLConnectionPool(**dbconfig)
-                print("Database connection pool initialized successfully")
-            return True
-
-    except Exception as e:
-        print(f"Error initializing database pool: {e}")
-        return False
-
-def get_connection():
-    global db_pool
-    retries = 0
-    
-    while retries < MAX_RETRIES:
-        try:
-            if db_pool is None:
-                if not initialize_db_pool():
-                    time.sleep(RETRY_DELAY)
-                    retries += 1
-                    continue
-
-            with POOL_LOCK:
-                connection = db_pool.get_connection()
-                
-            if connection.is_connected():
-                # Test the connection with a simple query
-                cursor = connection.cursor()
-                cursor.execute("SELECT 1")
-                cursor.close()
-                return connection
-            else:
-                connection.close()
-                time.sleep(RETRY_DELAY)
-                retries += 1
-
-        except mysql.connector.Error as err:
-            print(f"Database connection error: {err}")
-            time.sleep(RETRY_DELAY)
-            retries += 1
-            if retries == MAX_RETRIES:
-                print("Max retries reached. Could not establish database connection.")
-                return None
-            # Try to reinitialize the pool on error
-            with POOL_LOCK:
-                db_pool = None
-
-    return None
-
-def is_mysql_available():
-    try:
-        connection = get_connection()
-        if connection:
-            connection.close()
-            return True
-        return False
-    except:
-        return False
-
-def handle_mysql_error(error):
-    error_message = str(error)
-    if "Lost connection" in error_message or "Connection refused" in error_message:
-        # Try to reinitialize the pool on connection loss
-        with POOL_LOCK:
-            global db_pool
-            db_pool = None
-        return jsonify({"error": "Database connection lost. Please try again."}), 503
-    elif "Access denied" in error_message:
-        return jsonify({"error": "Database access denied. Please check credentials."}), 403
-    else:
-        return jsonify({"error": f"Database error: {error_message}"}), 500
-
-def cleanup_connection(connection):
-    try:
-        if connection and connection.is_connected():
-            connection.close()
-    except:
-        pass
-
-# Initialize the database pool when the application starts
-initialize_db_pool()
-
-# Add a periodic connection check
-def check_connection_periodically():
-    while True:
-        try:
-            if not is_mysql_available():
-                print("Database connection lost, attempting to reconnect...")
-                initialize_db_pool()
-            time.sleep(30)  # Check every 30 seconds
-        except:
-            time.sleep(30)
-
-# Start the periodic connection check in a background thread
-connection_check_thread = threading.Thread(target=check_connection_periodically, daemon=True)
-connection_check_thread.start()
-
-# Remove the old db_connection setup code
 # Check if the file "dev" exists
 if not os.path.exists('dev'):
     # Retrieve MySQL connection details from environment variable
@@ -178,24 +35,77 @@ if not os.path.exists('dev'):
 
         # MySQL connection setup
         try:
-            connection = get_connection()
-            if connection:
-                print("Connection successful")
-                connection.close()
-            else:
-                print("Failed to establish connection")
+            db_connection = mysql.connector.connect(
+                host=host,
+                user=user,
+                password=password,
+                database=database,
+                port=port
+            )
+            print("Connection successful")
 
         except mysql.connector.Error as err:
             print(f"Error connecting to MySQL: {err}")
+            db_connection = None
     else:
         print("MYSQL_DETAILS environment variable is not set.")
+        db_connection = None
 else:
     print("File 'dev' exists. Skipping MySQL connection setup.")
 
+
+
 # Helper function to reconnect to MySQL
 def reconnect_to_mysql():
-    return initialize_db_pool()
+    global db_connection
 
+    mysql_details = os.getenv('MYSQL_DETAILS')
+
+    if mysql_details:
+        # Split the details by "@"
+        details = mysql_details.split('@')
+
+        # Extract the individual values
+        host = details[0]
+        user = details[1]
+        password = details[2]
+        database = details[3]
+        port = int(details[4])
+
+        # MySQL connection setup
+        try:
+            db_connection = mysql.connector.connect(
+                host=host,
+                user=user,
+                password=password,
+                database=database,
+                port=port
+            )
+            print("Reconnection successful")
+            return True
+
+        except mysql.connector.Error as err:
+            print(f"Error reconnecting to MySQL: {err}")
+            db_connection = None
+            return False
+    else:
+        print("MYSQL_DETAILS environment variable is not set.")
+        db_connection = None
+        return False
+
+
+def get_connection():
+    global db_connection
+    
+    if db_connection and db_connection.is_connected():
+        return db_connection  # Return the existing connection if it's valid
+    
+    # If there is no connection or it's invalid, try to reconnect
+    if reconnect_to_mysql():
+        return db_connection
+    else:
+        return None
+    
 def generate_random_string(length=32):
     return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
@@ -205,6 +115,16 @@ def get_cursor():
     else:
         return None
 
+def is_mysql_available():
+    return db_connection is not None
+
+# Route to handle MySQL errors
+def handle_mysql_error(e):
+    print(f"MySQL Error: {e}")
+    return jsonify({"error": "MySQL database operation failed. Please check the database connection."}), 500
+
+
+
 ##✅ ------ create table users_recharge ---------------- ##
 @app.route('/create-table-users-recharge', methods=['GET'])
 def create_users_recharge_table():
@@ -212,7 +132,7 @@ def create_users_recharge_table():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
         
-        # Get a database connection and cursor
+                # Get a database connection and cursor
         connection = get_connection()  # Get the MySQL connection
         if connection is None:
             return jsonify({"error": "Failed to connect to the database"}), 500
@@ -225,7 +145,6 @@ def create_users_recharge_table():
             
             if table_exists:
                 cursor.close()
-                connection.close()
                 return jsonify({"message": "Table 'users_recharge' already exists"}), 200
             else:
                 # Define SQL query to create table if it doesn't exist
@@ -245,9 +164,8 @@ def create_users_recharge_table():
                 )
                 """
                 cursor.execute(sql_create_table)
-                connection.commit()
+                db_connection.commit()
                 cursor.close()
-                connection.close()
                 return jsonify({"message": "Table 'users_recharge' created successfully"}), 200
         else:
             return jsonify({"error": "Database connection not available"}), 500
@@ -698,7 +616,7 @@ def insert_mockup_users_recharge():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
         
-        # Get a database connection and cursor
+                # Get a database connection and cursor
         connection = get_connection()  # Get the MySQL connection
         if connection is None:
             return jsonify({"error": "Failed to connect to the database"}), 500
@@ -712,9 +630,8 @@ def insert_mockup_users_recharge():
             """
             data = ('mockUniqueId', 'testname', 'testpassword', 'admin', 'group1', 'mockEmail@example.com', 'active', 'mockToken', 'mockResetCode')
             cursor.execute(sql_insert, data)
-            connection.commit()
+            db_connection.commit()
             cursor.close()
-            connection.close()
             return jsonify({"message": "Mock data inserted into 'users_recharge' table"}), 200
         else:
             return jsonify({"error": "Database connection not available"}), 500
@@ -1016,6 +933,65 @@ def get_users_recharge():
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
 
+# @app.route('/user/add', methods=['POST'])
+# def add_user_to_users_recharge():
+#     try:
+#         if not is_mysql_available():
+#             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
+
+#         data = request.get_json()
+#         userName = data.get('userName')
+#         passwordHash = data.get('passwordHash')
+#         role = data.get('role')
+#         groupId = data.get('groupId')
+#         email = data.get('email')
+#         status = data.get('status')
+
+#         if not userName or not passwordHash or not email:
+#             return jsonify({"error": "Missing required fields: 'userName', 'passwordHash', or 'email'"}), 400
+
+#                 # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
+#         if cursor:
+#             # Check for existing userName or email
+#             cursor.execute("""
+#                 SELECT id FROM users_recharge WHERE userName = %s OR email = %s LIMIT 1
+#             """, (userName, email))
+#             if cursor.fetchone():
+#                 cursor.close()
+#                 return jsonify({"error": "Username or email already exists"}), 409
+
+#             # Generate unique values
+#             unique_id = generate_unique_value_for_column(cursor, "uniqueId")
+#             reset_code = generate_unique_value_for_column(cursor, "resetCode")
+#             token = generate_unique_value_for_column(cursor, "token")
+
+#             # Insert new user
+#             insert_query = """
+#             INSERT INTO users_recharge (uniqueId, userName, passwordHash, role, groupId, email, status, token, resetCode)
+#             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+#             """
+#             insert_data = (unique_id, userName, passwordHash, role, groupId, email, status, token, reset_code)
+#             cursor.execute(insert_query, insert_data)
+#             db_connection.commit()
+#             cursor.close()
+
+#             return jsonify({
+#                 "message": "User created successfully",
+#                 "uniqueId": unique_id,
+#                 "token": token,
+#                 "resetCode": reset_code
+#             }), 201
+#         else:
+#             return jsonify({"error": "Database connection not available"}), 500
+
+#     except mysql.connector.Error as e:
+#         return handle_mysql_error(e)
+
 @app.route('/user/add', methods=['POST'])
 def add_user_to_users_recharge():
     try:
@@ -1033,7 +1009,7 @@ def add_user_to_users_recharge():
         if not userName or not passwordHash or not email:
             return jsonify({"error": "Missing required fields: 'userName', 'passwordHash', or 'email'"}), 400
 
-        # Get a database connection and cursor
+                # Get a database connection and cursor
         connection = get_connection()  # Get the MySQL connection
         if connection is None:
             return jsonify({"error": "Failed to connect to the database"}), 500
@@ -1046,7 +1022,6 @@ def add_user_to_users_recharge():
             """, (userName, email))
             if cursor.fetchone():
                 cursor.close()
-                connection.close()
                 return jsonify({"error": "Username or email already exists"}), 409
 
             # Generate unique values
@@ -1061,7 +1036,7 @@ def add_user_to_users_recharge():
             """
             insert_data = (unique_id, userName, passwordHash, role, groupId, email, status, token, reset_code)
             cursor.execute(insert_query, insert_data)
-            connection.commit()
+            db_connection.commit()
 
             # Insert a new record in the store_recharge table
             sql_insert_store = """
@@ -1079,9 +1054,8 @@ def add_user_to_users_recharge():
                 "00:00:00"  # time left
             )
             cursor.execute(sql_insert_store, store_data)
-            connection.commit()
+            db_connection.commit()
             cursor.close()
-            connection.close()
 
             return jsonify({
                 "message": "User created successfully",
@@ -1125,7 +1099,6 @@ def edit_user_recharge():
 
             if not user:
                 cursor.close()
-                connection.close()
                 return jsonify({"error": "User not found with the provided email"}), 404
 
             # Update the user's details
@@ -1135,9 +1108,8 @@ def edit_user_recharge():
             WHERE email = %s
             """
             cursor.execute(update_query, (new_email, user_name, role, email))
-            connection.commit()
+            db_connection.commit()
             cursor.close()
-            connection.close()
 
             return jsonify({"message": "User details updated successfully"}), 200
         else:
@@ -1145,6 +1117,45 @@ def edit_user_recharge():
 
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
+
+# @app.route('/user/delete', methods=['DELETE'])
+# def delete_user_by_email():
+#     try:
+#         if not is_mysql_available():
+#             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
+
+#         data = request.get_json()
+#         email = data.get('email')
+
+#         if not email:
+#             return jsonify({"error": "Missing required field: 'email'"}), 400
+
+#                 # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
+#         if cursor:
+#             # Check if user exists
+#             cursor.execute("SELECT id FROM users_recharge WHERE email = %s LIMIT 1", (email,))
+#             user = cursor.fetchone()
+
+#             if not user:
+#                 cursor.close()
+#                 return jsonify({"error": "User not found with the provided email"}), 404
+
+#             # Delete user
+#             cursor.execute("DELETE FROM users_recharge WHERE email = %s", (email,))
+#             db_connection.commit()
+#             cursor.close()
+
+#             return jsonify({"message": f"User with email '{email}' deleted successfully"}), 200
+#         else:
+#             return jsonify({"error": "Database connection not available"}), 500
+
+#     except mysql.connector.Error as e:
+#         return handle_mysql_error(e)
 
 @app.route('/user/delete', methods=['DELETE'])
 def delete_user_by_email():
@@ -1171,20 +1182,18 @@ def delete_user_by_email():
 
             if not user:
                 cursor.close()
-                connection.close()
                 return jsonify({"error": "User not found with the provided email"}), 404
 
             unique_id = user['uniqueId']
 
             # Delete the corresponding record from store_recharge by uniqueId
             cursor.execute("DELETE FROM store_recharge WHERE uniqueId = %s", (unique_id,))
-            connection.commit()
+            db_connection.commit()
 
             # Delete user from users_recharge
             cursor.execute("DELETE FROM users_recharge WHERE email = %s", (email,))
-            connection.commit()
+            db_connection.commit()
             cursor.close()
-            connection.close()
 
             return jsonify({"message": f"User with email '{email}' and related store_recharge record deleted successfully"}), 200
         else:
@@ -1219,14 +1228,12 @@ def verify_user_by_token():
 
         if not user:
             cursor.close()
-            connection.close()
             return jsonify({"error": "Invalid or expired token"}), 404
 
         # Update user status to 'verified'
         cursor.execute("UPDATE users_recharge SET status = %s WHERE token = %s", ("verified", token))
-        connection.commit()
+        db_connection.commit()
         cursor.close()
-        connection.close()
 
         return jsonify({
             "message": "User successfully verified",
@@ -1262,7 +1269,6 @@ def assign_station_to_user():
 
             if not user:
                 cursor.close()
-                connection.close()
                 return jsonify({"error": "User not found with the provided email"}), 404
 
             unique_id = user[0]
@@ -1273,15 +1279,13 @@ def assign_station_to_user():
                 SET uniqueId = %s
                 WHERE stationName = %s
             """, (unique_id, station_name))
-            connection.commit()
+            db_connection.commit()
 
             if cursor.rowcount == 0:
                 cursor.close()
-                connection.close()
                 return jsonify({"error": f"No station found with the name '{station_name}'"}), 404
 
             cursor.close()
-            connection.close()
             return jsonify({
                 "message": f"Station '{station_name}' assigned to user with email '{email}'",
                 "uniqueId": unique_id
@@ -1308,9 +1312,8 @@ def clear_all_station_unique_ids():
         if cursor:
             # Update all uniqueId fields to an empty string
             cursor.execute("UPDATE station_recharge SET uniqueId = ''")
-            connection.commit()
+            db_connection.commit()
             cursor.close()
-            connection.close()
 
             return jsonify({"message": "All station uniqueId values set to empty string"}), 200
         else:
@@ -1340,15 +1343,13 @@ def clear_unique_id_by_station_name():
         if cursor:
             # Clear uniqueId for the specified stationName
             cursor.execute("UPDATE station_recharge SET uniqueId = '' WHERE stationName = %s", (station_name,))
-            connection.commit()
+            db_connection.commit()
 
             if cursor.rowcount == 0:
                 cursor.close()
-                connection.close()
                 return jsonify({"error": f"No station found with name '{station_name}'"}), 404
 
             cursor.close()
-            connection.close()
             return jsonify({"message": f"UniqueId cleared for station '{station_name}'"}), 200
         else:
             return jsonify({"error": "Database connection not available"}), 500
@@ -1390,7 +1391,6 @@ def reset_user_password_recharge():
 
             if not user:
                 cursor.close()
-                connection.close()
                 return jsonify({"error": "Email, password, or reset code is incorrect"}), 401
 
             # Update the password
@@ -1398,9 +1398,8 @@ def reset_user_password_recharge():
             UPDATE users_recharge SET passwordHash = %s WHERE email = %s
             """
             cursor.execute(update_query, (new_password_hash, email))
-            connection.commit()
+            db_connection.commit()
             cursor.close()
-            connection.close()
 
             return jsonify({"message": "Password has been reset successfully"}), 200
         else:
@@ -1434,7 +1433,6 @@ def get_user_reward_points():
 
             if not user:
                 cursor.close()
-                connection.close()
                 return jsonify({"error": "User not found with the provided email"}), 404
 
             unique_id = user[0]
@@ -1495,7 +1493,6 @@ def redeem_rewards():
         user_row = cursor.fetchone()
         if not user_row:
             cursor.close()
-            connection.close()
             return jsonify({"error": "User not found"}), 404
         unique_id = user_row[0]
 
@@ -1504,7 +1501,6 @@ def redeem_rewards():
         reward_row = cursor.fetchone()
         if not reward_row:
             cursor.close()
-            connection.close()
             return jsonify({"error": "Reward not found"}), 404
         reward_time_minutes = int(reward_row[0])
         reward_cost = int(reward_row[1])
@@ -1514,7 +1510,6 @@ def redeem_rewards():
         store_row = cursor.fetchone()
         if not store_row:
             cursor.close()
-            connection.close()
             return jsonify({"error": "Store data not found for user"}), 404
 
         current_points = int(store_row[0])
@@ -1540,9 +1535,8 @@ def redeem_rewards():
             SET rewardPoints = %s, TimeLeft = %s 
             WHERE uniqueId = %s
         """, (new_points, new_time_left_str, unique_id))
-        connection.commit()
+        db_connection.commit()
         cursor.close()
-        connection.close()
 
         return jsonify({
             "message": "Reward redeemed successfully",
@@ -1580,7 +1574,6 @@ def get_user_bottle_history():
 
         if not user:
             cursor.close()
-            connection.close()
             return jsonify({"error": "User not found with the provided email"}), 404
 
         unique_id = user[0]
@@ -1644,7 +1637,6 @@ def clear_user_bottle_history():
 
         if not user_row:
             cursor.close()
-            connection.close()
             return jsonify({"error": "User not found"}), 404
 
         unique_id = user_row[0]
@@ -1652,9 +1644,8 @@ def clear_user_bottle_history():
         # Step 2: Delete all records from bottle_history_recharge by uniqueId
         cursor.execute("DELETE FROM bottle_history_recharge WHERE uniqueId = %s", (unique_id,))
         deleted_count = cursor.rowcount
-        connection.commit()
+        db_connection.commit()
         cursor.close()
-        connection.close()
 
         return jsonify({
             "message": f"{deleted_count} bottle history record(s) cleared for user",
@@ -1683,9 +1674,8 @@ def clear_all_bottle_history():
         # Delete all records from the bottle_history_recharge table
         cursor.execute("DELETE FROM bottle_history_recharge")
         deleted_count = cursor.rowcount
-        connection.commit()
+        db_connection.commit()
         cursor.close()
-        connection.close()
 
         return jsonify({
             "message": f"All bottle history records cleared ({deleted_count} record(s) deleted)"
@@ -1726,7 +1716,6 @@ def get_user_leaderboard_last_7_days():
 
         if not store_totals:
             cursor.close()
-            connection.close()
             return jsonify({"message": "No bottle activity found in the last 7 days"}), 404
 
         # Step 2: Map uniqueId to userName and email
@@ -1744,7 +1733,6 @@ def get_user_leaderboard_last_7_days():
                 })
 
         cursor.close()
-        connection.close()
 
         # Step 3: Sort and get top 10
         leaderboard = sorted(leaderboard, key=lambda x: x['totalBottles'], reverse=True)[:10]
@@ -1781,7 +1769,6 @@ def get_user_timeleft():
         user_row = cursor.fetchone()
         if not user_row:
             cursor.close()
-            connection.close()
             return jsonify({"error": "User not found"}), 404
         unique_id = user_row[0]
 
@@ -1789,7 +1776,6 @@ def get_user_timeleft():
         cursor.execute("SELECT TimeLeft FROM store_recharge WHERE uniqueId = %s", (unique_id,))
         store_row = cursor.fetchone()
         cursor.close()
-        connection.close()
         if not store_row:
             return jsonify({"error": "Store data not found for user"}), 404
 
@@ -1831,7 +1817,6 @@ def get_user_notifications():
 
         if not user_row:
             cursor.close()
-            connection.close()
             return jsonify({"error": "User not found"}), 404
 
         unique_id = user_row[0]
@@ -1840,7 +1825,6 @@ def get_user_notifications():
         cursor.execute("SELECT * FROM notification_recharge WHERE uniqueId = %s", (unique_id,))
         notifications = cursor.fetchall()
         cursor.close()
-        connection.close()
 
         if not notifications:
             return jsonify({"message": "No notifications found for this user"}), 404
@@ -1891,7 +1875,6 @@ def clear_user_notifications():
 
         if not user_row:
             cursor.close()
-            connection.close()
             return jsonify({"error": "User not found"}), 404
 
         unique_id = user_row[0]
@@ -1899,9 +1882,8 @@ def clear_user_notifications():
         # Step 2: Delete all records from notification_recharge by uniqueId
         cursor.execute("DELETE FROM notification_recharge WHERE uniqueId = %s", (unique_id,))
         deleted_count = cursor.rowcount
-        connection.commit()
+        db_connection.commit()
         cursor.close()
-        connection.close()
 
         return jsonify({
             "message": f"{deleted_count} notification(s) cleared for user",
@@ -1940,7 +1922,6 @@ def mark_notification_as_read():
 
         if not user_row:
             cursor.close()
-            connection.close()
             return jsonify({"error": "User not found"}), 404
 
         unique_id = user_row[0]
@@ -1950,10 +1931,9 @@ def mark_notification_as_read():
             "UPDATE notification_recharge SET status = %s WHERE uniqueId = %s AND id = %s",
             ("read", unique_id, notification_id)
         )
-        connection.commit()
+        db_connection.commit()
         updated_rows = cursor.rowcount
         cursor.close()
-        connection.close()
 
         if updated_rows == 0:
             return jsonify({"error": "Notification not found or already marked as read"}), 404
@@ -1991,7 +1971,6 @@ def get_total_bottles_all_users():
         """)
         records = cursor.fetchall()
         cursor.close()
-        connection.close()
 
         total_bottles = 0
 
@@ -2031,9 +2010,8 @@ def reset_all_bottle_counts():
                 station2BottleCount = '0',
                 station3BottleCount = '0'
         """)
-        connection.commit()
+        db_connection.commit()
         cursor.close()
-        connection.close()
 
         return jsonify({"message": "All bottle counts have been reset to 0"}), 200
 
@@ -2067,15 +2045,13 @@ def set_station_state_machine():
             WHERE stationName = %s
             """
             cursor.execute(update_query, (station_status, station_name))
-            connection.commit()
+            db_connection.commit()
 
             if cursor.rowcount > 0:
                 cursor.close()
-                connection.close()
                 return jsonify({"message": f"Station '{station_name}' status updated to '{station_status}'"}), 200
             else:
                 cursor.close()
-                connection.close()
                 return jsonify({"error": f"Station '{station_name}' not found"}), 404
         else:
             return jsonify({"error": "Database connection not available"}), 500
@@ -2114,11 +2090,9 @@ def get_all_stations():
                     stations_list.append(station)
 
                 cursor.close()
-                connection.close()
                 return jsonify({"stations": stations_list}), 200
             else:
                 cursor.close()
-                connection.close()
                 return jsonify({"message": "No records found in 'station_recharge' table"}), 404
         else:
             return jsonify({"error": "Database connection not available"}), 500
@@ -2159,9 +2133,8 @@ def add_reward():
             VALUES (%s, %s, %s, %s, %s)
             """
             cursor.execute(sql_insert, (uniqueId, rewardId, rewardName, rewardTime, rewardCost))
-            connection.commit()
+            db_connection.commit()
             cursor.close()
-            connection.close()
             return jsonify({"message": "Reward added successfully"}), 200
         else:
             return jsonify({"error": "Database connection not available"}), 500
@@ -2187,16 +2160,14 @@ def delete_reward(id):
             DELETE FROM rewards_recharge WHERE id = %s
             """
             cursor.execute(sql_delete, (id,))
-            connection.commit()
+            db_connection.commit()
 
             # Check if the record was deleted
             if cursor.rowcount > 0:
                 cursor.close()
-                connection.close()
                 return jsonify({"message": f"Reward with id {id} deleted successfully"}), 200
             else:
                 cursor.close()
-                connection.close()
                 return jsonify({"error": f"Reward with id {id} not found"}), 404
         else:
             return jsonify({"error": "Database connection not available"}), 500
@@ -2299,7 +2270,6 @@ def insert_bottle_from_station():
 
             if not result:
                 cursor.close()
-                connection.close()
                 return jsonify({"error": f"No station found with name '{station_name}'"}), 404
 
             unique_id = result[0]
@@ -2314,7 +2284,6 @@ def insert_bottle_from_station():
                 column_to_update = "station3BottleCount"
             else:
                 cursor.close()
-                connection.close()
                 return jsonify({"error": f"Invalid station name: '{station_name}'"}), 400
 
             # Step 3: Increment bottle count and rewardPoints
@@ -2326,11 +2295,10 @@ def insert_bottle_from_station():
                 WHERE uniqueId = %s
             """
             cursor.execute(update_query, (unique_id,))
-            connection.commit()
+            db_connection.commit()
 
             if cursor.rowcount == 0:
                 cursor.close()
-                connection.close()
                 return jsonify({"error": "No matching store record found for uniqueId"}), 404
 
             # Step 4: Insert bottle history
@@ -2340,10 +2308,9 @@ def insert_bottle_from_station():
             """
             history_data = (unique_id, '1', 'Inserted via ESP', station_name, 'completed')
             cursor.execute(history_insert_query, history_data)
-            connection.commit()
+            db_connection.commit()
 
             cursor.close()
-            connection.close()
             return jsonify({
                 "message": f"1 bottle inserted into {station_name}, rewardPoints incremented, history logged",
                 "stationName": station_name,
@@ -2378,7 +2345,6 @@ def query_station_timeleft():
 
         if not station_row:
             cursor.close()
-            connection.close()
             return jsonify({"error": f"No station found with name '{station_name}'"}), 404
 
         unique_id, station_status = station_row
@@ -2388,7 +2354,6 @@ def query_station_timeleft():
             cursor.execute("SELECT TimeLeft FROM store_recharge WHERE uniqueId = %s", (unique_id,))
             store_row = cursor.fetchone()
             cursor.close()
-            connection.close()
 
             if store_row and store_row[0]:
                 time_left = store_row[0]
@@ -2396,7 +2361,6 @@ def query_station_timeleft():
                 time_left = "00:00:00"
         else:
             cursor.close()
-            connection.close()
             time_left = "00:00:00"
 
         return jsonify({
@@ -2430,7 +2394,6 @@ def set_station_status():
 
         if not station_row:
             cursor.close()
-            connection.close()
             return jsonify({"error": f"No station found with name '{station_name}'"}), 404
 
         # Update stationStatus
@@ -2438,9 +2401,8 @@ def set_station_status():
             "UPDATE station_recharge SET stationStatus = %s WHERE stationName = %s",
             (new_status, station_name)
         )
-        connection.commit()
+        db_connection.commit()
         cursor.close()
-        connection.close()
 
         return jsonify({"message": "OK"}), 200
 
@@ -2480,7 +2442,6 @@ def set_timeleft_for_station():
         station_row = cursor.fetchone()
         if not station_row:
             cursor.close()
-            connection.close()
             return jsonify({"error": f"No station found with name '{station_name}'"}), 404
 
         unique_id = station_row[0]
@@ -2490,16 +2451,14 @@ def set_timeleft_for_station():
         store_row = cursor.fetchone()
         if not store_row:
             cursor.close()
-            connection.close()
             return jsonify({"error": f"No store data found for uniqueId '{unique_id}'"}), 404
 
         cursor.execute(
             "UPDATE store_recharge SET TimeLeft = %s WHERE uniqueId = %s",
             (new_timeleft, unique_id)
         )
-        connection.commit()
+        db_connection.commit()
         cursor.close()
-        connection.close()
 
         # Step 3: Return response
         return jsonify({
@@ -2538,16 +2497,14 @@ def reset_user_run_timeleft():
         user_row = cursor.fetchone()
         if not user_row:
             cursor.close()
-            connection.close()
             return jsonify({"error": "User not found"}), 404
         unique_id = user_row[0]
 
         # Step 2: Get TimeLeft from store_recharge by uniqueId
         cursor.execute("SELECT TimeLeft FROM store_recharge WHERE uniqueId = %s", (unique_id,))
         store_row = cursor.fetchone()
-        cursor.close()
-        connection.close()
         if not store_row:
+            cursor.close()
             return jsonify({"error": "Store data not found for user"}), 404
         original_time_left = store_row[0]
 
@@ -2556,9 +2513,8 @@ def reset_user_run_timeleft():
             "UPDATE store_recharge SET TimeLeft = %s WHERE uniqueId = %s",
             ("00:00:00", unique_id)
         )
-        connection.commit()
+        db_connection.commit()
         cursor.close()
-        connection.close()
 
         return jsonify({
             "message": "TimeLeft has been reset to 00:00:00",
@@ -2597,7 +2553,6 @@ def get_user_check_timeleft():
         user_row = cursor.fetchone()
         if not user_row:
             cursor.close()
-            connection.close()
             return jsonify({"error": "User not found"}), 404
         unique_id = user_row[0]
 
@@ -2605,7 +2560,6 @@ def get_user_check_timeleft():
         cursor.execute("SELECT TimeLeft FROM store_recharge WHERE uniqueId = %s", (unique_id,))
         store_row = cursor.fetchone()
         cursor.close()
-        connection.close()
         if not store_row:
             return jsonify({"error": "Store data not found for user"}), 404
 
@@ -2641,7 +2595,6 @@ def show_users_recharge():
                 "token": r[8], "resetCode": r[9], "timestamp": r[10]
             } for r in records]
             cursor.close()
-            connection.close()
             return jsonify({"users_recharge": users_list}), 200 if users_list else 404
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
@@ -2666,7 +2619,6 @@ def show_profile_recharge():
                 "birthday": r[8], "photoURL": r[9], "timestamp": r[10]
             } for r in records]
             cursor.close()
-            connection.close()
             return jsonify({"profile_recharge": profile_list}), 200 if profile_list else 404
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
@@ -2690,7 +2642,6 @@ def show_station_recharge():
                 "stationStatus": r[3], "timestamp": r[4]
             } for r in records]
             cursor.close()
-            connection.close()
             return jsonify({"station_recharge": station_list}), 200 if station_list else 404
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
@@ -2715,7 +2666,6 @@ def show_store_recharge():
                 "rewardPoints": r[5], "TimeLeft": r[6], "timestamp": r[7]
             } for r in records]
             cursor.close()
-            connection.close()
             return jsonify({"store_recharge": store_list}), 200 if store_list else 404
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
@@ -2740,7 +2690,6 @@ def show_rewards_recharge():
                 "rewardCost": r[5], "timestamp": r[6]
             } for r in records]
             cursor.close()
-            connection.close()
             return jsonify({"rewards_recharge": reward_list}), 200 if reward_list else 404
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
@@ -2765,7 +2714,6 @@ def show_bottle_history_recharge():
                 "bottleStatus": r[5], "timestamp": r[6]
             } for r in records]
             cursor.close()
-            connection.close()
             return jsonify({"bottle_history_recharge": bottle_list}), 200 if bottle_list else 404
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
@@ -2790,7 +2738,6 @@ def show_notification_recharge():
                 "priority": r[5], "timestamp": r[6]
             } for r in records]
             cursor.close()
-            connection.close()
             return jsonify({"notification_recharge": notification_list}), 200 if notification_list else 404
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
