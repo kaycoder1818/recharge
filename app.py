@@ -1,21 +1,117 @@
 from flask import Flask, jsonify, request, render_template
-# from dotenv import load_dotenv
 import mysql.connector
+from mysql.connector import pooling
 import os
 from swagger.swaggerui import setup_swagger
 import random
 import string
 from datetime import datetime, timedelta
-
-
+import time
 
 app = Flask(__name__, template_folder='templates', static_folder='static', static_url_path='/static')
 
 # Set up Swagger
 setup_swagger(app)
 
-# Load environment variables from .env file
-# load_dotenv()
+# Global connection pool
+db_pool = None
+MAX_RETRIES = 3
+RETRY_DELAY = 2  # seconds
+
+def initialize_db_pool():
+    global db_pool
+    try:
+        mysql_details = os.getenv('MYSQL_DETAILS')
+        if not mysql_details:
+            print("MYSQL_DETAILS environment variable is not set.")
+            return False
+
+        # Split the details by "@"
+        details = mysql_details.split('@')
+        if len(details) != 5:
+            print("Invalid MYSQL_DETAILS format")
+            return False
+
+        # Extract the individual values
+        host = details[0]
+        user = details[1]
+        password = details[2]
+        database = details[3]
+        port = int(details[4])
+
+        # Configure the connection pool
+        dbconfig = {
+            "host": host,
+            "user": user,
+            "password": password,
+            "database": database,
+            "port": port,
+            "pool_name": "mypool",
+            "pool_size": 5,
+            "connect_timeout": 10,
+            "use_pure": True,
+            "autocommit": True
+        }
+
+        db_pool = mysql.connector.pooling.MySQLConnectionPool(**dbconfig)
+        print("Database connection pool initialized successfully")
+        return True
+
+    except Exception as e:
+        print(f"Error initializing database pool: {e}")
+        return False
+
+def get_connection():
+    global db_pool
+    retries = 0
+    
+    while retries < MAX_RETRIES:
+        try:
+            if db_pool is None:
+                if not initialize_db_pool():
+                    time.sleep(RETRY_DELAY)
+                    retries += 1
+                    continue
+
+            connection = db_pool.get_connection()
+            if connection.is_connected():
+                return connection
+            else:
+                connection.close()
+                time.sleep(RETRY_DELAY)
+                retries += 1
+
+        except mysql.connector.Error as err:
+            print(f"Database connection error: {err}")
+            time.sleep(RETRY_DELAY)
+            retries += 1
+            if retries == MAX_RETRIES:
+                print("Max retries reached. Could not establish database connection.")
+                return None
+
+    return None
+
+def is_mysql_available():
+    try:
+        connection = get_connection()
+        if connection:
+            connection.close()
+            return True
+        return False
+    except:
+        return False
+
+def handle_mysql_error(error):
+    error_message = str(error)
+    if "Lost connection" in error_message or "Connection refused" in error_message:
+        return jsonify({"error": "Database connection lost. Please try again."}), 503
+    elif "Access denied" in error_message:
+        return jsonify({"error": "Database access denied. Please check credentials."}), 403
+    else:
+        return jsonify({"error": f"Database error: {error_message}"}), 500
+
+# Initialize the database pool when the application starts
+initialize_db_pool()
 
 # Check if the file "dev" exists
 if not os.path.exists('dev'):
@@ -94,18 +190,6 @@ def reconnect_to_mysql():
         return False
 
 
-def get_connection():
-    global db_connection
-    
-    if db_connection and db_connection.is_connected():
-        return db_connection  # Return the existing connection if it's valid
-    
-    # If there is no connection or it's invalid, try to reconnect
-    if reconnect_to_mysql():
-        return db_connection
-    else:
-        return None
-    
 def generate_random_string(length=32):
     return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
@@ -114,16 +198,6 @@ def get_cursor():
         return db_connection.cursor()
     else:
         return None
-
-def is_mysql_available():
-    return db_connection is not None
-
-# Route to handle MySQL errors
-def handle_mysql_error(e):
-    print(f"MySQL Error: {e}")
-    return jsonify({"error": "MySQL database operation failed. Please check the database connection."}), 500
-
-
 
 ##✅ ------ create table users_recharge ---------------- ##
 @app.route('/create-table-users-recharge', methods=['GET'])
@@ -933,65 +1007,6 @@ def get_users_recharge():
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
 
-# @app.route('/user/add', methods=['POST'])
-# def add_user_to_users_recharge():
-#     try:
-#         if not is_mysql_available():
-#             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
-
-#         data = request.get_json()
-#         userName = data.get('userName')
-#         passwordHash = data.get('passwordHash')
-#         role = data.get('role')
-#         groupId = data.get('groupId')
-#         email = data.get('email')
-#         status = data.get('status')
-
-#         if not userName or not passwordHash or not email:
-#             return jsonify({"error": "Missing required fields: 'userName', 'passwordHash', or 'email'"}), 400
-
-#                 # Get a database connection and cursor
-        connection = get_connection()  # Get the MySQL connection
-        if connection is None:
-            return jsonify({"error": "Failed to connect to the database"}), 500
-        
-        cursor = connection.cursor()
-#         if cursor:
-#             # Check for existing userName or email
-#             cursor.execute("""
-#                 SELECT id FROM users_recharge WHERE userName = %s OR email = %s LIMIT 1
-#             """, (userName, email))
-#             if cursor.fetchone():
-#                 cursor.close()
-#                 return jsonify({"error": "Username or email already exists"}), 409
-
-#             # Generate unique values
-#             unique_id = generate_unique_value_for_column(cursor, "uniqueId")
-#             reset_code = generate_unique_value_for_column(cursor, "resetCode")
-#             token = generate_unique_value_for_column(cursor, "token")
-
-#             # Insert new user
-#             insert_query = """
-#             INSERT INTO users_recharge (uniqueId, userName, passwordHash, role, groupId, email, status, token, resetCode)
-#             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-#             """
-#             insert_data = (unique_id, userName, passwordHash, role, groupId, email, status, token, reset_code)
-#             cursor.execute(insert_query, insert_data)
-#             db_connection.commit()
-#             cursor.close()
-
-#             return jsonify({
-#                 "message": "User created successfully",
-#                 "uniqueId": unique_id,
-#                 "token": token,
-#                 "resetCode": reset_code
-#             }), 201
-#         else:
-#             return jsonify({"error": "Database connection not available"}), 500
-
-#     except mysql.connector.Error as e:
-#         return handle_mysql_error(e)
-
 @app.route('/user/add', methods=['POST'])
 def add_user_to_users_recharge():
     try:
@@ -1117,45 +1132,6 @@ def edit_user_recharge():
 
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
-
-# @app.route('/user/delete', methods=['DELETE'])
-# def delete_user_by_email():
-#     try:
-#         if not is_mysql_available():
-#             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
-
-#         data = request.get_json()
-#         email = data.get('email')
-
-#         if not email:
-#             return jsonify({"error": "Missing required field: 'email'"}), 400
-
-#                 # Get a database connection and cursor
-        connection = get_connection()  # Get the MySQL connection
-        if connection is None:
-            return jsonify({"error": "Failed to connect to the database"}), 500
-        
-        cursor = connection.cursor()
-#         if cursor:
-#             # Check if user exists
-#             cursor.execute("SELECT id FROM users_recharge WHERE email = %s LIMIT 1", (email,))
-#             user = cursor.fetchone()
-
-#             if not user:
-#                 cursor.close()
-#                 return jsonify({"error": "User not found with the provided email"}), 404
-
-#             # Delete user
-#             cursor.execute("DELETE FROM users_recharge WHERE email = %s", (email,))
-#             db_connection.commit()
-#             cursor.close()
-
-#             return jsonify({"message": f"User with email '{email}' deleted successfully"}), 200
-#         else:
-#             return jsonify({"error": "Database connection not available"}), 500
-
-#     except mysql.connector.Error as e:
-#         return handle_mysql_error(e)
 
 @app.route('/user/delete', methods=['DELETE'])
 def delete_user_by_email():
