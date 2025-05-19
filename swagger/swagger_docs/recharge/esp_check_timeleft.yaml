@@ -2,7 +2,7 @@
   post:
     summary: "Get the remaining TimeLeft for a user"
     description: "This endpoint retrieves the remaining TimeLeft for a user based on their email."
-    tags: ["ESP"]
+    tags: ["ESPv2"]
     parameters:
       - name: "body"
         in: "body"

@@ -13,7 +13,7 @@
             stationName:
               type: "string"
               description: "The name of the station to update"
-              example: "station1"
+              example: "Station1"
             stationStatus:
               type: "string"
               description: "The status to set for the station"

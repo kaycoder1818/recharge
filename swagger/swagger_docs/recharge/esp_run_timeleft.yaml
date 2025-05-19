@@ -2,7 +2,7 @@
   post:
     summary: "Reset the user's run TimeLeft"
     description: "This endpoint resets the TimeLeft value to '00:00:00' for a given user, based on their email."
-    tags: ["ESP"]
+    tags: ["ESPv2"]
     parameters:
       - name: "body"
         in: "body"
