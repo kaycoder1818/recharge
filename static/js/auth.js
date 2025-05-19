@@ -181,7 +181,7 @@ function checkAuthStatus() {
 }
 
 // Function to handle logout
-function handleLogout(e) {
+window.handleLogout = function(e) {
     if (e) e.preventDefault();
     
     // Clear all authentication data
