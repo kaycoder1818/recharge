@@ -10,6 +10,31 @@ const stationMessage = document.getElementById('station-message');
 // Get all station buttons
 const stationButtons = document.querySelectorAll('.station-button');
 
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    const navItems = document.querySelectorAll(".sidebar-nav .nav-item");
+
+    navItems.forEach(item => {
+        item.addEventListener("click", function (event) {
+            event.preventDefault(); // Stop the default <a href> navigation
+
+            const targetUrl = this.getAttribute("href");
+
+            // If it's not the logout button
+            if (this.id !== "logout_btn" && targetUrl && targetUrl !== "#") {
+                window.location.href = targetUrl; // Use JS navigation
+            }
+
+            // Optional: handle logout if needed
+            if (this.id === "logout_btn") {
+                console.log("Logging out...");
+            }
+        });
+    });
+});
+
+
 async function fetchBottleSummary() {
     try {
         const userEmail = localStorage.getItem('userEmail');

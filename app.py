@@ -2732,7 +2732,6 @@ def leaderboards_page():
     return render_template("leaderboards.html")
 
 
-
 @app.route("/admin-dashboard")
 def admin_dashboard_page():
     return render_template("admin_dashboard.html")
