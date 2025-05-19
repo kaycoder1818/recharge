@@ -12,6 +12,39 @@ const stationButtons = document.querySelectorAll('.station-button');
 
 
 
+document.addEventListener("DOMContentLoaded", function () {
+    const routeMap = {
+        "Home": "/user-dashboard",
+        "History": "/history",
+        "Rewards": "/rewards",
+        "Leaderboards": "/leaderboards"
+    };
+
+    const navItems = document.querySelectorAll(".nav-item");
+
+    navItems.forEach(item => {
+        item.addEventListener("click", function () {
+            const label = this.querySelector("span")?.textContent?.trim();
+
+            if (this.id === "logout_btn") {
+                console.log("Logout button clicked");
+                // Example logout handling
+                window.location.href = "/logout";
+                return;
+            }
+
+            if (label && routeMap[label]) {
+                console.log(`Navigating to: ${routeMap[label]} (${label})`);
+                window.location.href = routeMap[label];
+            } else {
+                console.log(`No route mapped for: ${label}`);
+            }
+        });
+    });
+});
+
+
+
 async function fetchBottleSummary() {
     try {
         const userEmail = localStorage.getItem('userEmail');
