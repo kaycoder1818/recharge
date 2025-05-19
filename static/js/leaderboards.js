@@ -4,7 +4,7 @@ const closeSidebarBtn = document.getElementById('closeSidebarBtn');
 const sidebar = document.getElementById('sidebar');
 const overlay = document.getElementById('sidebarOverlay');
 
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = 'https://recharge-ashen.vercel.app';
 
 function openSidebar() {
     sidebar.classList.add('active');
