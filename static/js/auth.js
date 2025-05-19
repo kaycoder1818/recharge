@@ -42,8 +42,8 @@ function getPageForRole(role) {
             return '/superadmin-dashboard';
         case 'user':
         default:
-            // return '/user-dashboard';
-            return '/';
+            return '/user-dashboard';
+            // return '/';
     }
 }
 
