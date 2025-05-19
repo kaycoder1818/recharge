@@ -180,7 +180,10 @@ async function selectStation(station) {
         if (stationMessage) stationMessage.textContent = `You have selected: ${station}`;
         saveStationToStorage(station);
         updateSelectedState(station);
-        document.getElementById('insert-bottle-container').style.display = 'block';
+        const insertBottleContainer = document.getElementById('insert-bottle-container');
+        if (insertBottleContainer) {
+            insertBottleContainer.style.display = 'block';
+        }
         closeModal();
     } catch (error) {
         console.error('Failed to assign station:', error);
@@ -235,6 +238,11 @@ if (insertBottleBtn) {
 
 // Initialize data when page loads
 document.addEventListener('DOMContentLoaded', () => {
+    // Set user name immediately from localStorage
+    const userName = localStorage.getItem('userName');
+    if (userName) {
+        document.getElementById('user-name').textContent = userName;
+    }
     // Check if user is logged in
     const token = localStorage.getItem('isAuthenticated');
     if (!token) {
