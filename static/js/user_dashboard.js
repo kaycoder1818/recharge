@@ -14,7 +14,7 @@ const stationButtons = document.querySelectorAll('.station-button');
 
 async function fetchBottleSummary() {
     try {
-        const userEmail = localStorage.getItem('userEmail');
+        const userEmail = localStorage.getItem('email');
         if (!userEmail || localStorage.getItem('isAuthenticated') !== 'true') {
             console.error('Not authenticated');
             window.location.replace('/');
