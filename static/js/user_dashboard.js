@@ -155,7 +155,7 @@ modal.addEventListener('touchend', (e) => {
 async function selectStation(station) {
     const userEmail = localStorage.getItem('userEmail');
     if (!userEmail) {
-        stationMessage.textContent = 'User email not found. Please log in again.';
+        if (stationMessage) stationMessage.textContent = 'User email not found. Please log in again.';
         return;
     }
     // Prepare stationName for API (remove spaces)
@@ -177,14 +177,14 @@ async function selectStation(station) {
         }
         // If successful, update UI and localStorage
         currentStation.textContent = station;
-        stationMessage.textContent = `You have selected: ${station}`;
+        if (stationMessage) stationMessage.textContent = `You have selected: ${station}`;
         saveStationToStorage(station);
         updateSelectedState(station);
         document.getElementById('insert-bottle-container').style.display = 'block';
         closeModal();
     } catch (error) {
         console.error('Failed to assign station:', error);
-        stationMessage.textContent = 'Failed to assign station. Please try again.';
+        if (stationMessage) stationMessage.textContent = 'Failed to assign station. Please try again.';
     }
 }
 
@@ -247,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (savedStation) {
         currentStation.textContent = savedStation;
         updateSelectedState(savedStation);
-        stationMessage.textContent = `You have selected: ${savedStation}`;
+        if (stationMessage) stationMessage.textContent = `You have selected: ${savedStation}`;
         // Show insert bottle button if station is selected
         document.getElementById('insert-bottle-container').style.display = 'block';
     }
