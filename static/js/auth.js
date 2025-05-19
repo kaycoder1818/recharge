@@ -144,14 +144,14 @@ async function handleLogin(e) {
 
 // Function to check if user is already logged in
 function checkAuthStatus() {
-    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    const currentPage = window.location.pathname.split('/').pop() || '/';
     const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
     const userRole = localStorage.getItem('userRole');
 
     console.log('Auth check:', { currentPage, isAuthenticated, userRole });
 
     // Public pages (no auth needed)
-    const publicPages = ['index.html', 'register.html', ''];
+    const publicPages = ['/', '/register', ''];
     
     if (isAuthenticated) {
         // If authenticated and on a public page, redirect to dashboard
@@ -169,7 +169,7 @@ function checkAuthStatus() {
         // If not authenticated and not on a public page, redirect to login
         if (!publicPages.includes(currentPage)) {
             console.log('Not authenticated, redirecting to login');
-            window.location.replace('index.html');
+            window.location.replace('/');
             return;
         }
     }
@@ -187,7 +187,7 @@ function handleLogout(e) {
     console.log('Storage cleared');
 
     // Redirect to login page
-    window.location.replace('index.html');
+    window.location.replace('/');
 }
 
 // Add event listeners when DOM is loaded

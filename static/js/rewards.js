@@ -161,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check if user is logged in
     const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
     if (!isAuthenticated) {
-        window.location.replace('index.html');
+        window.location.replace('/');
         return;
     }
 
