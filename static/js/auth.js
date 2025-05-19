@@ -124,12 +124,15 @@ async function handleLogin(e) {
             throw new Error('Login failed: ' + (data.message || 'Unknown error'));
         }
 
+        // Extract user data from response
+        const userData = data.user || data;
+
         // Store user session data
         localStorage.setItem('isAuthenticated', 'true');
         localStorage.setItem('userEmail', email);
-        localStorage.setItem('userName', data.userName || '');
-        localStorage.setItem('userRole', data.role || 'user');
-        localStorage.setItem('lastLogin', data.timestamp || new Date().toISOString());
+        localStorage.setItem('userName', userData.userName || '');
+        localStorage.setItem('userRole', userData.role || 'user');
+        localStorage.setItem('lastLogin', userData.timestamp || new Date().toISOString());
 
         console.log('Session state:', {
             isAuthenticated: localStorage.getItem('isAuthenticated'),
@@ -143,7 +146,7 @@ async function handleLogin(e) {
 
         // Redirect based on user role after a short delay
         setTimeout(() => {
-            redirectBasedOnRole(data.role || 'user');
+            redirectBasedOnRole(userData.role || 'user');
         }, 1500);
 
     } catch (error) {
