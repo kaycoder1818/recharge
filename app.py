@@ -2073,6 +2073,63 @@ def insert_bottle_from_station():
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
 
+
+# {
+#   "stationName": "Station1",
+#   "new_timeLeft": "01:30:00"
+# }
+
+@app.route('/esp/set-timeleft', methods=['POST'])
+def set_timeleft_for_station():
+    try:
+        if not is_mysql_available():
+            return jsonify({"error": "MySQL database not responding"}), 500
+
+        data = request.get_json()
+        station_name = data.get('stationName')
+        new_timeleft = data.get('new_timeLeft')
+
+        if not station_name or not new_timeleft:
+            return jsonify({"error": "Missing required fields: 'stationName' and/or 'new_timeLeft'"}), 400
+
+        cursor = get_cursor()
+        if not cursor:
+            return jsonify({"error": "Database connection not available"}), 500
+
+        # Step 1: Get uniqueId from station_recharge by stationName
+        cursor.execute("SELECT uniqueId FROM station_recharge WHERE stationName = %s LIMIT 1", (station_name,))
+        station_row = cursor.fetchone()
+        if not station_row:
+            cursor.close()
+            return jsonify({"error": f"No station found with name '{station_name}'"}), 404
+
+        unique_id = station_row[0]
+
+        # Step 2: Check existence in store_recharge and update TimeLeft
+        cursor.execute("SELECT id FROM store_recharge WHERE uniqueId = %s", (unique_id,))
+        store_row = cursor.fetchone()
+        if not store_row:
+            cursor.close()
+            return jsonify({"error": f"No store data found for uniqueId '{unique_id}'"}), 404
+
+        cursor.execute(
+            "UPDATE store_recharge SET TimeLeft = %s WHERE uniqueId = %s",
+            (new_timeleft, unique_id)
+        )
+        db_connection.commit()
+        cursor.close()
+
+        # Step 3: Return response
+        return jsonify({
+            "message": "TimeLeft updated successfully",
+            "stationName": station_name,
+            "uniqueId": unique_id,
+            "newTimeLeft": new_timeleft
+        }), 200
+
+    except mysql.connector.Error as e:
+        return handle_mysql_error(e)
+
 @app.route('/esp/run/timeleft', methods=['POST'])
 def reset_user_run_timeleft():
     try:
@@ -2165,6 +2222,7 @@ def get_user_check_timeleft():
 
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
+
 
 
 
@@ -2299,7 +2357,6 @@ def show_notification_recharge():
             return jsonify({"notification_recharge": notification_list}), 200 if notification_list else 404
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
-
 
 # Route to reconnect to MySQL
 @app.route('/reconnect-mysql', methods=['GET'])
