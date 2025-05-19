@@ -124,15 +124,37 @@ async function handleLogin(e) {
             throw new Error('Login failed: ' + (data.message || 'Unknown error'));
         }
 
-        // Extract user data from response
-        const userData = data.user || data;
+        // Fetch complete user details from /user endpoint
+        const userResponse = await fetch(`${API_BASE_URL}/user`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${data.token}`
+            }
+        });
+
+        if (!userResponse.ok) {
+            throw new Error('Failed to fetch user details');
+        }
+
+        const userDetails = await userResponse.json();
+        console.log('User details:', userDetails);
+
+        // Find the user that matches the login email
+        const matchedUser = userDetails.find(user => user.email === email);
+        
+        if (!matchedUser) {
+            throw new Error('User details not found');
+        }
 
         // Store user session data
         localStorage.setItem('isAuthenticated', 'true');
         localStorage.setItem('userEmail', email);
-        localStorage.setItem('userName', userData.userName || '');
-        localStorage.setItem('userRole', userData.role || 'user');
-        localStorage.setItem('lastLogin', userData.timestamp || new Date().toISOString());
+        localStorage.setItem('userName', matchedUser.userName || '');
+        localStorage.setItem('userRole', matchedUser.role || 'user');
+        localStorage.setItem('lastLogin', matchedUser.timestamp || new Date().toISOString());
+        localStorage.setItem('token', data.token || '');
 
         console.log('Session state:', {
             isAuthenticated: localStorage.getItem('isAuthenticated'),
@@ -146,7 +168,7 @@ async function handleLogin(e) {
 
         // Redirect based on user role after a short delay
         setTimeout(() => {
-            redirectBasedOnRole(userData.role || 'user');
+            redirectBasedOnRole(matchedUser.role || 'user');
         }, 1500);
 
     } catch (error) {
