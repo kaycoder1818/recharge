@@ -48,7 +48,7 @@ function getPageForRole(role) {
 
 // Function to check if current page matches role
 function isOnCorrectPage(role) {
-    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    const currentPage = window.location.pathname.split('/').pop() || '/';
     const correctPage = getPageForRole(role);
     return currentPage === correctPage;
 }

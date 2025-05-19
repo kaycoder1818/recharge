@@ -15,7 +15,7 @@ async function fetchBottleSummary() {
         const userEmail = localStorage.getItem('userEmail');
         if (!userEmail || localStorage.getItem('isAuthenticated') !== 'true') {
             console.error('Not authenticated');
-            window.location.replace('index.html');
+            window.location.replace('/');
             return;
         }
 
@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check if user is logged in
     const token = localStorage.getItem('isAuthenticated');
     if (!token) {
-        window.location.replace('index.html');
+        window.location.replace('/');
         return;
     }
 
