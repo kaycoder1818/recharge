@@ -14,6 +14,7 @@ const stationButtons = document.querySelectorAll('.station-button');
 
 async function fetchBottleSummary() {
     try {
+        console.log('Fetching bottle history for:', userEmail);
         const userEmail = localStorage.getItem('userEmail');
         if (!userEmail || localStorage.getItem('isAuthenticated') !== 'true') {
             console.error('Not authenticated');
