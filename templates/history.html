@@ -30,7 +30,7 @@
             </button>
         </div>
         <nav class="sidebar-nav">
-            <a href="user_dashboard.html" class="nav-item">
+<!--             <a href="user_dashboard.html" class="nav-item">
                 <i class="fas fa-home"></i>
                 <span>Home</span>
             </a>
@@ -49,9 +49,58 @@
             <a href="#" id="logout_btn" class="nav-item logout">
                 <i class="fas fa-sign-out-alt"></i>
                 <span>Logout</span>
+            </a> -->
+
+            <a href="javascript:void(0)" class="nav-item active" onclick="navigateToDashboard()">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a href="javascript:void(0)" class="nav-item" onclick="navigateToHistory()">
+                <i class="fas fa-history"></i>
+                <span>History</span>
+            </a>
+            <a href="javascript:void(0)" class="nav-item" onclick="navigateToRewards()">
+                <i class="fas fa-gift"></i>
+                <span>Rewards</span>
+            </a>
+            <a href="javascript:void(0)" class="nav-item" onclick="navigateToLeaderboards()">
+                <i class="fas fa-trophy"></i>
+                <span>Leaderboards</span>
+            </a>
+            <a href="javascript:void(0)" id="logout_btn" class="nav-item logout" onclick="logoutUser()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
             </a>
         </nav>
     </div>
+
+<script>
+    function navigateToDashboard() {
+        console.log("Navigating to /user-dashboard");
+        window.location.href = window.location.origin + "/user-dashboard";  // Full URL for Dashboard
+    }
+
+    function navigateToHistory() {
+        console.log("Navigating to /history");
+        window.location.href = window.location.origin + "/history";  // Full URL for History
+    }
+
+    function navigateToRewards() {
+        console.log("Navigating to /rewards");
+        window.location.href = window.location.origin + "/rewards";  // Full URL for Rewards
+    }
+
+    function navigateToLeaderboards() {
+        console.log("Navigating to /leaderboards");
+        window.location.href = window.location.origin + "/leaderboards";  // Full URL for Leaderboards
+    }
+
+    function logoutUser() {
+        console.log("Logout button clicked");
+        // You can add logout logic here if needed (e.g., window.location.href = "/logout";)
+    }
+</script>
+
 
     <!-- Overlay for mobile -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
