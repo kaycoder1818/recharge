@@ -76,27 +76,40 @@
 <script>
     function navigateToDashboard() {
         console.log("Navigating to /user-dashboard");
-        window.location.href = window.location.origin + "/user-dashboard";  // Full URL for Dashboard
+        updateActiveNavItem('navigateToDashboard');
+        window.location.href = window.location.origin + "/user-dashboard";
     }
 
     function navigateToHistory() {
         console.log("Navigating to /history");
-        window.location.href = window.location.origin + "/history";  // Full URL for History
+        updateActiveNavItem('navigateToHistory');
+        window.location.href = window.location.origin + "/history";
     }
 
     function navigateToRewards() {
         console.log("Navigating to /rewards");
-        window.location.href = window.location.origin + "/rewards";  // Full URL for Rewards
+        updateActiveNavItem('navigateToRewards');
+        window.location.href = window.location.origin + "/rewards";
     }
 
     function navigateToLeaderboards() {
         console.log("Navigating to /leaderboards");
-        window.location.href = window.location.origin + "/leaderboards";  // Full URL for Leaderboards
+        updateActiveNavItem('navigateToLeaderboards');
+        window.location.href = window.location.origin + "/leaderboards";
+    }
+
+    function updateActiveNavItem(navigationFunction) {
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+            item.classList.remove('active');
+            if (item.getAttribute('onclick')?.includes(navigationFunction)) {
+                item.classList.add('active');
+            }
+        });
     }
 
     function logoutUser() {
         console.log("Logout button clicked");
-        // You can add logout logic here if needed (e.g., window.location.href = "/logout";)
     }
 </script>
 
