@@ -140,13 +140,28 @@ async function handleLogin(e) {
 
         const userDetails = await userResponse.json();
         console.log('User details:', userDetails);
+        console.log('Login email:', email);
 
         // Handle user details - it might be a single object or an array
-        const matchedUser = Array.isArray(userDetails) 
-            ? userDetails.find(user => user.email === email)
-            : userDetails.email === email ? userDetails : null;
+        let matchedUser = null;
+        
+        if (Array.isArray(userDetails)) {
+            console.log('User details is an array');
+            matchedUser = userDetails.find(user => user.email === email);
+        } else if (userDetails && typeof userDetails === 'object') {
+            console.log('User details is an object');
+            // Check if the response contains a user object
+            if (userDetails.user && userDetails.user.email === email) {
+                matchedUser = userDetails.user;
+            } else if (userDetails.email === email) {
+                matchedUser = userDetails;
+            }
+        }
+
+        console.log('Matched user:', matchedUser);
         
         if (!matchedUser) {
+            console.error('No matching user found. User details:', userDetails);
             throw new Error('User details not found');
         }
 
