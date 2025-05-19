@@ -10,35 +10,28 @@ const stationMessage = document.getElementById('station-message');
 // Get all station buttons
 const stationButtons = document.querySelectorAll('.station-button');
 
+document.addEventListener("DOMContentLoaded", function () {
+    const navItems = document.querySelectorAll(".nav-item");
 
+    navItems.forEach(item => {
+        item.addEventListener("click", function () {
+            if (this.id === "logout_btn") {
+                console.log("Logout button clicked");
+                // Add logout logic here if needed
+                return;
+            }
 
-
-    document.addEventListener("DOMContentLoaded", function () {
-        const navItems = document.querySelectorAll(".nav-item");
-
-        navItems.forEach(item => {
-            item.addEventListener("click", function () {
-                if (this.id === "logout_btn") {
-                    console.log("Logout button clicked");
-                    // You can trigger logout logic here
-                    return;
-                }
-
-                const targetUrl = this.getAttribute("data-url");
-                if (targetUrl) {
-                    console.log(`Navigating to: ${targetUrl}`);
-                    window.location.href = targetUrl;
-                } else {
-                    console.log("No data-url found on clicked item.");
-                }
-            });
+            const targetUrl = this.getAttribute("data-url");
+            if (targetUrl) {
+                console.log(`Navigating to: ${targetUrl}`);
+                window.location.href = targetUrl;
+            } else {
+                console.log("No data-url found.");
+            }
         });
     });
-
-
-
-
-
+});
+    
 async function fetchBottleSummary() {
     try {
         const userEmail = localStorage.getItem('userEmail');

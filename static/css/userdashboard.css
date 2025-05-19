@@ -63,6 +63,10 @@ body {
     color: #349e00;
 }
 
+.nav-item {
+    cursor: pointer;
+}
+
 .nav-item.active {
     background-color: #e4f0a0;
     color: #349e00;
