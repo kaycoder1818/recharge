@@ -141,8 +141,10 @@ async function handleLogin(e) {
         const userDetails = await userResponse.json();
         console.log('User details:', userDetails);
 
-        // Find the user that matches the login email
-        const matchedUser = userDetails.find(user => user.email === email);
+        // Handle user details - it might be a single object or an array
+        const matchedUser = Array.isArray(userDetails) 
+            ? userDetails.find(user => user.email === email)
+            : userDetails.email === email ? userDetails : null;
         
         if (!matchedUser) {
             throw new Error('User details not found');
