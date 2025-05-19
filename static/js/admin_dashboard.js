@@ -1,4 +1,3 @@
-// import { API_BASE_URL } from 'config.js';
 const API_BASE_URL = 'https://recharge-ashen.vercel.app';
 
 // Fetch total bottles from API
