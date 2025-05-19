@@ -239,6 +239,13 @@ if (insertBottleBtn) {
 // Initialize data when page loads
 document.addEventListener('DOMContentLoaded', () => {
     // Set user name immediately from localStorage
+            console.log('Session state:', {
+            isAuthenticated: localStorage.getItem('isAuthenticated'),
+            email: localStorage.getItem('userEmail'),
+            userName: localStorage.getItem('userName'),
+            role: localStorage.getItem('userRole'),
+            lastLogin: localStorage.getItem('lastLogin')
+        });
     const userName = localStorage.getItem('userName');
     if (userName) {
         document.getElementById('user-name').textContent = userName;
