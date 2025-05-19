@@ -180,13 +180,13 @@ function checkAuthStatus() {
 // Function to handle logout
 function handleLogout(e) {
     if (e) e.preventDefault();
-    console.log('Logout initiated');
+    console.log('Logout button clicked - handleLogout function called');
     
     // Clear all authentication data
     localStorage.clear();
     sessionStorage.clear();
     
-    console.log('Storage cleared');
+    console.log('Storage cleared, redirecting to login page');
 
     // Redirect to login page
     window.location.replace('/');
@@ -210,6 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('Found logout buttons:', logoutBtns.length);
     
     logoutBtns.forEach(btn => {
+        console.log('Adding click listener to logout button:', btn);
         btn.addEventListener('click', handleLogout);
     });
 }); 
