@@ -134,7 +134,7 @@ async function handleLogin(e) {
         console.log('Session state:', {
             isAuthenticated: localStorage.getItem('isAuthenticated'),
             email: localStorage.getItem('userEmail'),
-            UserName: localStorage.getItem('userName'),
+            userName: localStorage.getItem('userName'),
             role: localStorage.getItem('userRole'),
             lastLogin: localStorage.getItem('lastLogin')
         });
