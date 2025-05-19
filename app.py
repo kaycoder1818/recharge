@@ -2411,7 +2411,10 @@ else:
 #     return render_template("history-preview.html")
 
 
-
+@app.route("/user-dashboard")
+def user_dashboard_page():
+    return render_template("user_dashboard.html")
+    
 @app.route("/register")
 def register_page():
     return render_template("register.html")
@@ -2428,9 +2431,7 @@ def rewards_page():
 def leaderboards_page():
     return render_template("leaderboards.html")
 
-@app.route("/user-dashboard")
-def user_dashboard_page():
-    return render_template("user_dashboard.html")
+
 
 @app.route("/admin-dashboard")
 def admin_dashboard_page():
