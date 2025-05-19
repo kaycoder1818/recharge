@@ -146,13 +146,16 @@ async function handleLogin(e) {
         let matchedUser = null;
         
         if (Array.isArray(userDetails.users_recharge)) {
-            matchedUser = userDetails.users_recharge.find(user => user.email === email);
+            console.log('All user emails:', userDetails.users_recharge.map(u => u.email));
+            matchedUser = userDetails.users_recharge.find(
+                user => user.email && user.email.toLowerCase().trim() === email.toLowerCase().trim()
+            );
         } else if (Array.isArray(userDetails)) {
-            matchedUser = userDetails.find(user => user.email === email);
+            matchedUser = userDetails.find(user => user.email && user.email.toLowerCase().trim() === email.toLowerCase().trim());
         } else if (userDetails && typeof userDetails === 'object') {
-            if (userDetails.user && userDetails.user.email === email) {
+            if (userDetails.user && userDetails.user.email && userDetails.user.email.toLowerCase().trim() === email.toLowerCase().trim()) {
                 matchedUser = userDetails.user;
-            } else if (userDetails.email === email) {
+            } else if (userDetails.email && userDetails.email.toLowerCase().trim() === email.toLowerCase().trim()) {
                 matchedUser = userDetails;
             }
         }
