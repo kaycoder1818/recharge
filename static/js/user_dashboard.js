@@ -10,31 +10,8 @@ const stationMessage = document.getElementById('station-message');
 // Get all station buttons
 const stationButtons = document.querySelectorAll('.station-button');
 
-function navigateToDashboard() {
-    console.log("Navigating to /user-dashboard");
-    window.location.href = "/user-dashboard";
-}
 
-function navigateToHistory() {
-    console.log("Navigating to /history");
-    window.location.href = "/history";
-}
 
-function navigateToRewards() {
-    console.log("Navigating to /rewards");
-    window.location.href = "/rewards";
-}
-
-function navigateToLeaderboards() {
-    console.log("Navigating to /leaderboards");
-    window.location.href = "/leaderboards";
-}
-
-function logoutUser() {
-    console.log("Logout button clicked");
-    // Add logout logic here (e.g. window.location.href = "/logout";)
-}
-    
 async function fetchBottleSummary() {
     try {
         const userEmail = localStorage.getItem('userEmail');
