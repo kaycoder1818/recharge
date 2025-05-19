@@ -15,6 +15,7 @@ const stationButtons = document.querySelectorAll('.station-button');
 async function fetchBottleSummary() {
     try {   
         const userEmail = localStorage.getItem('userEmail');
+        console.log('Fetching bottle history for:', userEmail);
         if (!userEmail || localStorage.getItem('isAuthenticated') !== 'true') {
             console.error('Not authenticated');
             window.location.replace('/');
@@ -34,7 +35,6 @@ async function fetchBottleSummary() {
 
         const data = await response.json();
         const history = data.bottleHistory || [];
-        console.log('Fetching bottle history for:', userEmail);
         // Sum up all bottleCount values (ensure they are numbers)
         const totalBottles = history.reduce((sum, entry) => sum + parseInt(entry.bottleCount), 0);
 
