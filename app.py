@@ -2371,6 +2371,45 @@ def query_station_timeleft():
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
 
+@app.route('/esp/set-station-status', methods=['POST'])
+def set_station_status():
+    try:
+        if not is_mysql_available():
+            return jsonify({"error": "MySQL database not responding"}), 500
+
+        data = request.get_json()
+        station_name = data.get('stationName')
+        new_status = data.get('new_stationStatus')
+
+        if not station_name or not new_status:
+            return jsonify({"error": "Missing required fields: 'stationName' and/or 'new_stationStatus'"}), 400
+
+        cursor = get_cursor()
+        if not cursor:
+            return jsonify({"error": "Database connection not available"}), 500
+
+        # Check if the station exists
+        cursor.execute("SELECT id FROM station_recharge WHERE stationName = %s LIMIT 1", (station_name,))
+        station_row = cursor.fetchone()
+
+        if not station_row:
+            cursor.close()
+            return jsonify({"error": f"No station found with name '{station_name}'"}), 404
+
+        # Update stationStatus
+        cursor.execute(
+            "UPDATE station_recharge SET stationStatus = %s WHERE stationName = %s",
+            (new_status, station_name)
+        )
+        db_connection.commit()
+        cursor.close()
+
+        return jsonify({"message": "OK"}), 200
+
+    except mysql.connector.Error as e:
+        return handle_mysql_error(e)
+
+
 # {
 #   "stationName": "Station1",
 #   "new_timeLeft": "01:30:00"
