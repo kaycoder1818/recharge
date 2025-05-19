@@ -44,6 +44,24 @@ function redirectBasedOnRole(role) {
     window.location.href = targetPage;
 }
 
+// Function to show error message
+function showError(message) {
+    const errorElement = document.getElementById('error-message');
+    errorElement.textContent = message;
+}
+
+// Function to set loading state
+function setLoading(isLoading) {
+    const button = document.querySelector('button[type="submit"]');
+    if (isLoading) {
+        button.classList.add('loading');
+        button.disabled = true;
+    } else {
+        button.classList.remove('loading');
+        button.disabled = false;
+    }
+}
+
 // Function to handle login
 async function handleLogin(e) {
     e.preventDefault();
@@ -51,28 +69,32 @@ async function handleLogin(e) {
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value.trim();
 
+    // Clear previous error
+    showError('');
+
     // Validate inputs
     if (!email || !password) {
-        showNotification('Please fill in all fields', 'error');
+        showError('Please fill in all fields');
         return;
     }
 
     if (!isValidEmail(email)) {
-        showNotification('Please enter a valid email address', 'error');
+        showError('Please enter a valid email address');
         return;
     }
 
     if (!isValidPassword(password)) {
-        showNotification('Password must be at least 6 characters long', 'error');
+        showError('Password must be at least 6 characters long');
         return;
     }
 
     try {
+        setLoading(true);
         console.log('Attempting login...');
 
         const loginData = {
             email: email,
-            passwordHash: password // Note: Backend will handle password hashing
+            passwordHash: password
         };
 
         const response = await fetch(`${API_BASE_URL}/auth/login/email`, {
@@ -117,7 +139,9 @@ async function handleLogin(e) {
 
     } catch (error) {
         console.error('Login error:', error);
-        showNotification(error.message || 'Login failed. Please try again.', 'error');
+        showError(error.message || 'Login failed. Please try again.');
+    } finally {
+        setLoading(false);
     }
 }
 

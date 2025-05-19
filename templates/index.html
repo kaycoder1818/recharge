@@ -31,7 +31,11 @@
                     <input type="password" id="password" placeholder="Password" required>
                     <span id="togglePassword" class="eye-icon">Show</span>
                 </div>            
-                <button type="submit">Login</button>
+                <button type="submit">
+                    <span class="button-text">Login</span>
+                    <span class="loader"></span>
+                </button>
+                <div id="error-message" class="error-message"></div>
                 <p>Don't have an account? <a href="/register">Register here</a></p>
             </form>
         </div>
