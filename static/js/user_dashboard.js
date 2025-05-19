@@ -12,36 +12,30 @@ const stationButtons = document.querySelectorAll('.station-button');
 
 
 
-document.addEventListener("DOMContentLoaded", function () {
-    const routeMap = {
-        "Home": "/user-dashboard",
-        "History": "/history",
-        "Rewards": "/rewards",
-        "Leaderboards": "/leaderboards"
-    };
 
-    const navItems = document.querySelectorAll(".nav-item");
+    document.addEventListener("DOMContentLoaded", function () {
+        const navItems = document.querySelectorAll(".nav-item");
 
-    navItems.forEach(item => {
-        item.addEventListener("click", function () {
-            const label = this.querySelector("span")?.textContent?.trim();
+        navItems.forEach(item => {
+            item.addEventListener("click", function () {
+                if (this.id === "logout_btn") {
+                    console.log("Logout button clicked");
+                    // You can trigger logout logic here
+                    return;
+                }
 
-            if (this.id === "logout_btn") {
-                console.log("Logout button clicked");
-                // Example logout handling
-                window.location.href = "/logout";
-                return;
-            }
-
-            if (label && routeMap[label]) {
-                console.log(`Navigating to: ${routeMap[label]} (${label})`);
-                window.location.href = routeMap[label];
-            } else {
-                console.log(`No route mapped for: ${label}`);
-            }
+                const targetUrl = this.getAttribute("data-url");
+                if (targetUrl) {
+                    console.log(`Navigating to: ${targetUrl}`);
+                    window.location.href = targetUrl;
+                } else {
+                    console.log("No data-url found on clicked item.");
+                }
+            });
         });
     });
-});
+
+
 
 
 
