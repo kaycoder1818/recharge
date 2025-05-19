@@ -152,20 +152,40 @@ modal.addEventListener('touchend', (e) => {
     }
 });
 
-function selectStation(station) {
-    currentStation.textContent = station;
-    stationMessage.textContent = `You have selected: ${station}`;
-    
-    // Save to localStorage
-    saveStationToStorage(station);
-    
-    // Update selected state
-    updateSelectedState(station);
-    
-    // Show insert bottle button
-    document.getElementById('insert-bottle-container').style.display = 'block';
-    
-    closeModal();
+async function selectStation(station) {
+    const userEmail = localStorage.getItem('userEmail');
+    if (!userEmail) {
+        stationMessage.textContent = 'User email not found. Please log in again.';
+        return;
+    }
+    // Prepare stationName for API (remove spaces)
+    const stationName = station.replace(/\s+/g, '');
+    try {
+        const response = await fetch(`${API_BASE_URL}/user/assign-machine`, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: userEmail,
+                stationName: stationName
+            })
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        // If successful, update UI and localStorage
+        currentStation.textContent = station;
+        stationMessage.textContent = `You have selected: ${station}`;
+        saveStationToStorage(station);
+        updateSelectedState(station);
+        document.getElementById('insert-bottle-container').style.display = 'block';
+        closeModal();
+    } catch (error) {
+        console.error('Failed to assign station:', error);
+        stationMessage.textContent = 'Failed to assign station. Please try again.';
+    }
 }
 
 // Add insert bottle functionality
