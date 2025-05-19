@@ -11,7 +11,7 @@
     <!-- <link rel="stylesheet" href="userdashboard.css"> -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/userdashboard.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="icon" type="image/x-icon" href="assets/ReChargeLOGO (2).ico">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/ReChargeLOGO(2).ico') }}">
 </head>
 <body>
     <!-- Hamburger Menu Button -->
@@ -23,7 +23,7 @@
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <!-- <img src="assets/ReChargeLOGO (2).png" alt="Logo" class="sidebar-logo"> -->
-            <img src="{{ url_for('static', filename='images/ReChargeLOGO (2).png') }}" class="sidebar-logo">
+            <img src="{{ url_for('static', filename='images/ReChargeLOGO(2).png') }}" class="sidebar-logo">
             <button class="close-sidebar" id="closeSidebarBtn">
                 <i class="fas fa-times"></i>
             </button>

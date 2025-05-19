@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/x-icon" href="assets/ReChargeLOGO (2).ico">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/ReChargeLOGO(2).ico') }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>History - ReCharge</title>
@@ -19,7 +19,8 @@
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <img src="assets/ReChargeLOGO (2).png" alt="Logo" class="sidebar-logo">
+            <!-- <img src="assets/ReChargeLOGO (2).png" alt="Logo" class="sidebar-logo"> -->
+            <img src="{{ url_for('static', filename='images/ReChargeLOGO(2).png') }}" class="sidebar-logo">
             <button class="close-sidebar" id="closeSidebarBtn">
                 <i class="fas fa-times"></i>
             </button>
