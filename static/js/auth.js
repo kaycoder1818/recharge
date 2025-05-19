@@ -145,12 +145,11 @@ async function handleLogin(e) {
         // Handle user details - it might be a single object or an array
         let matchedUser = null;
         
-        if (Array.isArray(userDetails)) {
-            console.log('User details is an array');
+        if (Array.isArray(userDetails.users_recharge)) {
+            matchedUser = userDetails.users_recharge.find(user => user.email === email);
+        } else if (Array.isArray(userDetails)) {
             matchedUser = userDetails.find(user => user.email === email);
         } else if (userDetails && typeof userDetails === 'object') {
-            console.log('User details is an object');
-            // Check if the response contains a user object
             if (userDetails.user && userDetails.user.email === email) {
                 matchedUser = userDetails.user;
             } else if (userDetails.email === email) {
