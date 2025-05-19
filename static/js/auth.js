@@ -50,21 +50,19 @@ function getPageForRole(role) {
 
 // Function to check if current page matches role
 function isOnCorrectPage(role) {
-    const currentPage = window.location.pathname.split('/').pop() || '/';
+    const currentPage = window.location.pathname;
     const correctPage = getPageForRole(role);
-    return currentPage === correctPage;
+    return currentPage === correctPage || currentPage === correctPage + '/';
 }
 
 // Function to handle role-based redirection
 function redirectBasedOnRole(role) {
     if (isOnCorrectPage(role)) {
-        console.log('Already on correct page for role:', role);
         return;
     }
 
     const targetPage = getPageForRole(role);
-    console.log(`Redirecting to ${targetPage} for role ${role}`);
-    window.location.replace(targetPage);
+    window.location.href = targetPage;
 }
 
 // Function to handle login
@@ -146,58 +144,50 @@ async function handleLogin(e) {
 
 // Function to check if user is already logged in
 function checkAuthStatus() {
-    const currentPage = window.location.pathname.split('/').pop() || '/';
+    const currentPage = window.location.pathname;
     const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
     const userRole = localStorage.getItem('userRole');
-
-    console.log('Auth check:', { currentPage, isAuthenticated, userRole });
 
     // Public pages (no auth needed)
     const publicPages = ['/', '/register', ''];
     
-    if (isAuthenticated) {
-        // If authenticated and on a public page, redirect to dashboard
-        if (publicPages.includes(currentPage)) {
-            redirectBasedOnRole(userRole);
-            return;
-        }
-        
-        // If authenticated but on wrong dashboard, redirect to correct one
-        if (!isOnCorrectPage(userRole)) {
-            redirectBasedOnRole(userRole);
-            return;
-        }
-    } else {
-        // If not authenticated and not on a public page, redirect to login
-        if (!publicPages.includes(currentPage)) {
-            console.log('Not authenticated, redirecting to login');
-            window.location.replace('/');
-            return;
-        }
+    // If not authenticated and trying to access protected page
+    if (!isAuthenticated && !publicPages.includes(currentPage)) {
+        window.location.href = '/';
+        return;
+    }
+
+    // If authenticated and on public page, redirect to appropriate dashboard
+    if (isAuthenticated && publicPages.includes(currentPage)) {
+        redirectBasedOnRole(userRole);
+        return;
+    }
+
+    // If authenticated but on wrong dashboard, redirect to correct one
+    if (isAuthenticated && !isOnCorrectPage(userRole)) {
+        redirectBasedOnRole(userRole);
+        return;
     }
 }
 
 // Function to handle logout
 function handleLogout(e) {
     if (e) e.preventDefault();
-    console.log('Logout button clicked - handleLogout function called');
     
     // Clear all authentication data
     localStorage.clear();
     sessionStorage.clear();
     
-    console.log('Storage cleared, redirecting to login page');
-
     // Redirect to login page
-    window.location.replace('/');
+    window.location.href = '/';
 }
 
 // Add event listeners when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM loaded - Setting up auth listeners');
-    
-    // Check if user is already logged in
-    checkAuthStatus();
+    // Only check auth status if we're not already on the login page
+    if (window.location.pathname !== '/') {
+        checkAuthStatus();
+    }
 
     // Add login form submit handler
     const loginForm = document.getElementById('login-form');
@@ -205,12 +195,9 @@ document.addEventListener('DOMContentLoaded', () => {
         loginForm.addEventListener('submit', handleLogin);
     }
 
-    // Add logout button handler - check for both IDs used in different pages
+    // Add logout button handler
     const logoutBtns = document.querySelectorAll('#logout_btn, #logout');
-    console.log('Found logout buttons:', logoutBtns.length);
-    
     logoutBtns.forEach(btn => {
-        console.log('Adding click listener to logout button:', btn);
         btn.addEventListener('click', handleLogout);
     });
 }); 
