@@ -127,7 +127,7 @@ async function handleLogin(e) {
         // Store user session data
         localStorage.setItem('isAuthenticated', 'true');
         localStorage.setItem('userEmail', email);
-        localStorage.setItem('userName', data.userName || '');
+        localStorage.setItem('userName', data.name || data.userName || data.fullName || '');
         localStorage.setItem('userRole', data.role || 'user');
         localStorage.setItem('lastLogin', data.timestamp || new Date().toISOString());
 
