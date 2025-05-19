@@ -132,7 +132,12 @@ def create_users_recharge_table():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
         
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Check if table 'users_recharge' exists
             cursor.execute("SHOW TABLES LIKE 'users_recharge'")
@@ -174,7 +179,12 @@ def create_profile_recharge_table():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
         
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Check if table 'profile_recharge' exists
             cursor.execute("SHOW TABLES LIKE 'profile_recharge'")
@@ -217,7 +227,12 @@ def create_store_recharge_table():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
         
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Check if table 'store_recharge' exists
             cursor.execute("SHOW TABLES LIKE 'store_recharge'")
@@ -257,7 +272,12 @@ def create_station_recharge_table():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
         
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Check if table 'station_recharge' exists
             cursor.execute("SHOW TABLES LIKE 'station_recharge'")
@@ -294,7 +314,12 @@ def create_rewards_recharge_table():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
         
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Check if table 'rewards_recharge' exists
             cursor.execute("SHOW TABLES LIKE 'rewards_recharge'")
@@ -332,7 +357,12 @@ def create_bottle_history_recharge_table():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
         
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Check if table 'bottle_history_recharge' exists
             cursor.execute("SHOW TABLES LIKE 'bottle_history_recharge'")
@@ -371,7 +401,12 @@ def create_notification_recharge_table():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
         
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Check if table 'notification_recharge' exists
             cursor.execute("SHOW TABLES LIKE 'notification_recharge'")
@@ -411,7 +446,12 @@ def delete_users_recharge_table():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
         
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Drop the 'users_recharge' table
             cursor.execute("DROP TABLE IF EXISTS users_recharge")
@@ -430,7 +470,12 @@ def delete_profile_recharge_table():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
         
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Drop the 'profile_recharge' table
             cursor.execute("DROP TABLE IF EXISTS profile_recharge")
@@ -449,7 +494,12 @@ def delete_store_recharge_table():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
         
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Drop the 'store_recharge' table
             cursor.execute("DROP TABLE IF EXISTS store_recharge")
@@ -468,7 +518,12 @@ def delete_station_recharge_table():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
         
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Drop the 'station_recharge' table
             cursor.execute("DROP TABLE IF EXISTS station_recharge")
@@ -487,7 +542,12 @@ def delete_rewards_recharge_table():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
         
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Drop the 'rewards_recharge' table
             cursor.execute("DROP TABLE IF EXISTS rewards_recharge")
@@ -506,7 +566,12 @@ def delete_bottle_history_recharge_table():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
         
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Drop the 'bottle_history_recharge' table
             cursor.execute("DROP TABLE IF EXISTS bottle_history_recharge")
@@ -525,7 +590,12 @@ def delete_notification_recharge_table():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
         
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Drop the 'notification_recharge' table
             cursor.execute("DROP TABLE IF EXISTS notification_recharge")
@@ -546,7 +616,12 @@ def insert_mockup_users_recharge():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
         
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Insert mock data into 'users_recharge' table without the 'timestamp' field
             sql_insert = """
@@ -569,7 +644,12 @@ def insert_mockup_profile_recharge():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
         
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Insert mock data into 'profile_recharge' table
             sql_insert = """
@@ -592,7 +672,12 @@ def insert_mockup_station_recharge():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
         
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Insert multiple mock data into 'station_recharge' table
             sql_insert = """
@@ -619,7 +704,12 @@ def insert_mockup_store_recharge():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Insert mock data into 'store_recharge'
             sql_insert = """
@@ -654,7 +744,12 @@ def insert_mockup_rewards_recharge():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Insert mock data into 'rewards_recharge' table
             sql_insert = """
@@ -677,7 +772,12 @@ def insert_mockup_bottle_history_recharge():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Insert mock data into 'bottle_history_recharge' table
             sql_insert = """
@@ -700,7 +800,12 @@ def insert_mockup_notification_recharge():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Insert mock data into 'notification_recharge' table
             sql_insert = """
@@ -732,14 +837,14 @@ def login_with_email():
         if not email or not password_hash:
             return jsonify({"error": "Missing 'email' or 'passwordHash' in request body"}), 400
 
-        # cursor = get_cursor()
-
-        # Get a database connection and cursor
+                # Get a database connection and cursor
         connection = get_connection()  # Get the MySQL connection
         if connection is None:
             return jsonify({"error": "Failed to connect to the database"}), 500
         
         cursor = connection.cursor()
+
+
 
         if cursor:
             sql_query = """
@@ -786,7 +891,12 @@ def get_users_recharge():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
         
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
 
         if cursor:
             # Fetch all records from the 'users_recharge' table
@@ -840,7 +950,12 @@ def get_users_recharge():
 #         if not userName or not passwordHash or not email:
 #             return jsonify({"error": "Missing required fields: 'userName', 'passwordHash', or 'email'"}), 400
 
-#         cursor = get_cursor()
+#                 # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
 #         if cursor:
 #             # Check for existing userName or email
 #             cursor.execute("""
@@ -894,7 +1009,12 @@ def add_user_to_users_recharge():
         if not userName or not passwordHash or not email:
             return jsonify({"error": "Missing required fields: 'userName', 'passwordHash', or 'email'"}), 400
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Check for existing userName or email
             cursor.execute("""
@@ -966,7 +1086,12 @@ def edit_user_recharge():
         if not all([new_email, user_name, role, email]):
             return jsonify({"error": "Missing required fields: 'new_email', 'userName', 'role', or 'email'"}), 400
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Check if the user exists with the provided email
             cursor.execute("SELECT id FROM users_recharge WHERE email = %s LIMIT 1", (email,))
@@ -1005,7 +1130,12 @@ def edit_user_recharge():
 #         if not email:
 #             return jsonify({"error": "Missing required field: 'email'"}), 400
 
-#         cursor = get_cursor()
+#                 # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
 #         if cursor:
 #             # Check if user exists
 #             cursor.execute("SELECT id FROM users_recharge WHERE email = %s LIMIT 1", (email,))
@@ -1039,7 +1169,12 @@ def delete_user_by_email():
         if not email:
             return jsonify({"error": "Missing required field: 'email'"}), 400
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Check if user exists
             cursor.execute("SELECT id, uniqueId FROM users_recharge WHERE email = %s LIMIT 1", (email,))
@@ -1078,7 +1213,12 @@ def verify_user_by_token():
         if not token:
             return jsonify({"error": "Missing required query parameter: 'token'"}), 400
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if not cursor:
             return jsonify({"error": "Database connection not available"}), 500
 
@@ -1116,7 +1256,12 @@ def assign_station_to_user():
         if not email:
             return jsonify({"error": "Missing required field: 'email'"}), 400
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Step 1: Find user's uniqueId by email
             cursor.execute("SELECT uniqueId FROM users_recharge WHERE email = %s LIMIT 1", (email,))
@@ -1158,7 +1303,12 @@ def clear_all_station_unique_ids():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Update all uniqueId fields to an empty string
             cursor.execute("UPDATE station_recharge SET uniqueId = ''")
@@ -1184,7 +1334,12 @@ def clear_unique_id_by_station_name():
         if not station_name:
             return jsonify({"error": "Missing required field: 'stationName'"}), 400
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Clear uniqueId for the specified stationName
             cursor.execute("UPDATE station_recharge SET uniqueId = '' WHERE stationName = %s", (station_name,))
@@ -1218,7 +1373,12 @@ def reset_user_password_recharge():
         if not all([email, password_hash, reset_code, new_password_hash]):
             return jsonify({"error": "Missing required fields"}), 400
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Check if matching user exists
             check_query = """
@@ -1260,7 +1420,12 @@ def get_user_reward_points():
         if not email:
             return jsonify({"error": "Missing 'email' in request body"}), 400
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Step 1: Get uniqueId from users_recharge by email
             cursor.execute("SELECT uniqueId FROM users_recharge WHERE email = %s LIMIT 1", (email,))
@@ -1314,7 +1479,12 @@ def redeem_rewards():
         if not email or not reward_id:
             return jsonify({"error": "Missing 'email' or 'rewardId'"}), 400
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if not cursor:
             return jsonify({"error": "Database connection not available"}), 500
 
@@ -1389,7 +1559,12 @@ def get_user_bottle_history():
         if not email:
             return jsonify({"error": "Missing 'email' in request body"}), 400
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if not cursor:
             return jsonify({"error": "Database connection not available"}), 500
 
@@ -1447,7 +1622,12 @@ def clear_user_bottle_history():
         if not email:
             return jsonify({"error": "Missing required field: 'email'"}), 400
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if not cursor:
             return jsonify({"error": "Database connection not available"}), 500
 
@@ -1482,7 +1662,12 @@ def clear_all_bottle_history():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding"}), 500
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if not cursor:
             return jsonify({"error": "Database connection not available"}), 500
 
@@ -1505,7 +1690,12 @@ def get_user_leaderboard_last_7_days():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if not cursor:
             return jsonify({"error": "Database connection not available"}), 500
 
@@ -1565,7 +1755,12 @@ def get_user_timeleft():
         if not email:
             return jsonify({"error": "Missing required field: 'email'"}), 400
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if not cursor:
             return jsonify({"error": "Database connection not available"}), 500
 
@@ -1607,7 +1802,12 @@ def get_user_notifications():
         if not email:
             return jsonify({"error": "Missing required field: 'email'"}), 400
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if not cursor:
             return jsonify({"error": "Database connection not available"}), 500
 
@@ -1660,7 +1860,12 @@ def clear_user_notifications():
         if not email:
             return jsonify({"error": "Missing required field: 'email'"}), 400
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if not cursor:
             return jsonify({"error": "Database connection not available"}), 500
 
@@ -1702,7 +1907,12 @@ def mark_notification_as_read():
         if not email or not notification_id:
             return jsonify({"error": "Missing required field: 'email' or 'id'"}), 400
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if not cursor:
             return jsonify({"error": "Database connection not available"}), 500
 
@@ -1745,7 +1955,12 @@ def get_total_bottles_all_users():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if not cursor:
             return jsonify({"error": "Database connection not available"}), 500
 
@@ -1779,7 +1994,12 @@ def reset_all_bottle_counts():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if not cursor:
             return jsonify({"error": "Database connection not available"}), 500
 
@@ -1811,7 +2031,12 @@ def set_station_state_machine():
         if not station_name or not station_status:
             return jsonify({"error": "Missing required fields: 'stationName' or 'stationStatus'"}), 400
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Update the station status in station_recharge table
             update_query = """
@@ -1840,7 +2065,12 @@ def get_all_stations():
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Fetch all records from the 'station_recharge' table
             cursor.execute("SELECT * FROM station_recharge")
@@ -1890,7 +2120,12 @@ def add_reward():
         rewardTime = data['rewardTime']
         rewardCost = data['rewardCost']
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Insert the provided data into 'rewards_recharge' table
             sql_insert = """
@@ -1913,7 +2148,12 @@ def delete_reward(id):
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding, please check the database service"}), 500
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Delete the record from 'rewards_recharge' table where the ID matches
             sql_delete = """
@@ -1948,7 +2188,12 @@ def delete_reward(id):
 #         if not station_name:
 #             return jsonify({"error": "Missing required field: 'stationName'"}), 400
 
-#         cursor = get_cursor()
+#                 # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
 #         if cursor:
 #             # Step 1: Get uniqueId by stationName
 #             cursor.execute("SELECT uniqueId FROM station_recharge WHERE stationName = %s LIMIT 1", (station_name,))
@@ -2012,7 +2257,12 @@ def insert_bottle_from_station():
         if not station_name:
             return jsonify({"error": "Missing required field: 'stationName'"}), 400
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             # Step 1: Get uniqueId by stationName
             cursor.execute("SELECT uniqueId FROM station_recharge WHERE stationName = %s LIMIT 1", (station_name,))
@@ -2092,7 +2342,12 @@ def set_timeleft_for_station():
         if not station_name or not new_timeleft:
             return jsonify({"error": "Missing required fields: 'stationName' and/or 'new_timeLeft'"}), 400
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if not cursor:
             return jsonify({"error": "Database connection not available"}), 500
 
@@ -2142,7 +2397,12 @@ def reset_user_run_timeleft():
         if not email:
             return jsonify({"error": "Missing required field: 'email'"}), 400
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if not cursor:
             return jsonify({"error": "Database connection not available"}), 500
 
@@ -2193,7 +2453,12 @@ def get_user_check_timeleft():
         if not email:
             return jsonify({"error": "Missing required field: 'email'"}), 400
 
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if not cursor:
             return jsonify({"error": "Database connection not available"}), 500
 
@@ -2231,7 +2496,12 @@ def show_users_recharge():
     try:
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding"}), 500
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             cursor.execute("SELECT * FROM users_recharge")
             records = cursor.fetchall()
@@ -2250,7 +2520,12 @@ def show_profile_recharge():
     try:
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding"}), 500
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             cursor.execute("SELECT * FROM profile_recharge")
             records = cursor.fetchall()
@@ -2269,7 +2544,12 @@ def show_station_recharge():
     try:
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding"}), 500
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             cursor.execute("SELECT * FROM station_recharge")
             records = cursor.fetchall()
@@ -2287,7 +2567,12 @@ def show_store_recharge():
     try:
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding"}), 500
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             cursor.execute("SELECT * FROM store_recharge")
             records = cursor.fetchall()
@@ -2306,7 +2591,12 @@ def show_rewards_recharge():
     try:
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding"}), 500
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             cursor.execute("SELECT * FROM rewards_recharge")
             records = cursor.fetchall()
@@ -2325,7 +2615,12 @@ def show_bottle_history_recharge():
     try:
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding"}), 500
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             cursor.execute("SELECT * FROM bottle_history_recharge")
             records = cursor.fetchall()
@@ -2344,7 +2639,12 @@ def show_notification_recharge():
     try:
         if not is_mysql_available():
             return jsonify({"error": "MySQL database not responding"}), 500
-        cursor = get_cursor()
+                # Get a database connection and cursor
+        connection = get_connection()  # Get the MySQL connection
+        if connection is None:
+            return jsonify({"error": "Failed to connect to the database"}), 500
+        
+        cursor = connection.cursor()
         if cursor:
             cursor.execute("SELECT * FROM notification_recharge")
             records = cursor.fetchall()
@@ -2414,7 +2714,7 @@ else:
 @app.route("/user-dashboard")
 def user_dashboard_page():
     return render_template("user_dashboard.html")
-    
+
 @app.route("/register")
 def register_page():
     return render_template("register.html")
