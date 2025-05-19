@@ -1,7 +1,7 @@
-/esp/run/timeleft:
+/esp/set-timeleft:
   post:
-    summary: "Reset a user's remaining run time"
-    description: "Resets the 'TimeLeft' field to '00:00:00' for a user identified by email. Retrieves and returns the original and updated values."
+    summary: "Set TimeLeft for a station"
+    description: "Updates the 'TimeLeft' value for a specific station if it exists in the database."
     tags: ["ESP"]
     parameters:
       - name: "body"
@@ -10,13 +10,17 @@
         schema:
           type: "object"
           properties:
-            email:
+            stationName:
               type: "string"
-              description: "User's email address"
-              example: "user@example.com"
+              description: "The name of the station to update"
+              example: "Station1"
+            new_timeLeft:
+              type: "string"
+              description: "The new TimeLeft value to set (HH:MM:SS format)"
+              example: "02:15:00"
     responses:
       '200':
-        description: "TimeLeft reset successful"
+        description: "TimeLeft updated successfully"
         content:
           application/json:
             schema:
@@ -24,21 +28,18 @@
               properties:
                 message:
                   type: string
-                  example: "TimeLeft has been reset to 00:00:00"
-                email:
+                  example: "TimeLeft updated successfully"
+                stationName:
                   type: string
-                  example: "user@example.com"
+                  example: "Station1"
                 uniqueId:
                   type: integer
-                  example: 1234
-                previousTimeLeft:
-                  type: string
-                  example: "01:30:00"
+                  example: 4567
                 newTimeLeft:
                   type: string
-                  example: "00:00:00"
+                  example: "02:15:00"
       '400':
-        description: "Bad Request due to missing or invalid parameters"
+        description: "Bad Request due to missing required fields"
         content:
           application/json:
             schema:
@@ -46,9 +47,9 @@
               properties:
                 error:
                   type: string
-                  example: "Missing required field: 'email'"
+                  example: "Missing required fields: 'stationName' and/or 'new_timeLeft'"
       '404':
-        description: "User or store data not found"
+        description: "Station or store data not found"
         content:
           application/json:
             schema:
@@ -56,7 +57,7 @@
               properties:
                 error:
                   type: string
-                  example: "User not found"
+                  example: "No station found with name 'Station1'"
       '500':
         description: "Internal Server Error due to database issues"
         content:
