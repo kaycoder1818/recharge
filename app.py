@@ -7,6 +7,7 @@ import random
 import string
 from datetime import datetime, timedelta
 import time
+import threading
 
 app = Flask(__name__, template_folder='templates', static_folder='static', static_url_path='/static')
 
@@ -17,6 +18,10 @@ setup_swagger(app)
 db_pool = None
 MAX_RETRIES = 3
 RETRY_DELAY = 2  # seconds
+POOL_SIZE = 5
+CONNECTION_TIMEOUT = 10
+POOL_NAME = "mypool"
+POOL_LOCK = threading.Lock()
 
 def initialize_db_pool():
     global db_pool
@@ -46,16 +51,22 @@ def initialize_db_pool():
             "password": password,
             "database": database,
             "port": port,
-            "pool_name": "mypool",
-            "pool_size": 5,
-            "connect_timeout": 10,
+            "pool_name": POOL_NAME,
+            "pool_size": POOL_SIZE,
+            "connect_timeout": CONNECTION_TIMEOUT,
             "use_pure": True,
-            "autocommit": True
+            "autocommit": True,
+            "get_warnings": True,
+            "raise_on_warnings": True,
+            "connection_timeout": CONNECTION_TIMEOUT,
+            "pool_reset_session": True
         }
 
-        db_pool = mysql.connector.pooling.MySQLConnectionPool(**dbconfig)
-        print("Database connection pool initialized successfully")
-        return True
+        with POOL_LOCK:
+            if db_pool is None:
+                db_pool = mysql.connector.pooling.MySQLConnectionPool(**dbconfig)
+                print("Database connection pool initialized successfully")
+            return True
 
     except Exception as e:
         print(f"Error initializing database pool: {e}")
@@ -73,8 +84,14 @@ def get_connection():
                     retries += 1
                     continue
 
-            connection = db_pool.get_connection()
+            with POOL_LOCK:
+                connection = db_pool.get_connection()
+                
             if connection.is_connected():
+                # Test the connection with a simple query
+                cursor = connection.cursor()
+                cursor.execute("SELECT 1")
+                cursor.close()
                 return connection
             else:
                 connection.close()
@@ -88,6 +105,9 @@ def get_connection():
             if retries == MAX_RETRIES:
                 print("Max retries reached. Could not establish database connection.")
                 return None
+            # Try to reinitialize the pool on error
+            with POOL_LOCK:
+                db_pool = None
 
     return None
 
@@ -104,14 +124,40 @@ def is_mysql_available():
 def handle_mysql_error(error):
     error_message = str(error)
     if "Lost connection" in error_message or "Connection refused" in error_message:
+        # Try to reinitialize the pool on connection loss
+        with POOL_LOCK:
+            global db_pool
+            db_pool = None
         return jsonify({"error": "Database connection lost. Please try again."}), 503
     elif "Access denied" in error_message:
         return jsonify({"error": "Database access denied. Please check credentials."}), 403
     else:
         return jsonify({"error": f"Database error: {error_message}"}), 500
 
+def cleanup_connection(connection):
+    try:
+        if connection and connection.is_connected():
+            connection.close()
+    except:
+        pass
+
 # Initialize the database pool when the application starts
 initialize_db_pool()
+
+# Add a periodic connection check
+def check_connection_periodically():
+    while True:
+        try:
+            if not is_mysql_available():
+                print("Database connection lost, attempting to reconnect...")
+                initialize_db_pool()
+            time.sleep(30)  # Check every 30 seconds
+        except:
+            time.sleep(30)
+
+# Start the periodic connection check in a background thread
+connection_check_thread = threading.Thread(target=check_connection_periodically, daemon=True)
+connection_check_thread.start()
 
 # Check if the file "dev" exists
 if not os.path.exists('dev'):
