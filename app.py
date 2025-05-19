@@ -16,14 +16,12 @@ setup_swagger(app)
 
 # Global connection pool
 db_pool = None
-MAX_RETRIES = 5  # Increased from 3 to 5
+MAX_RETRIES = 3
 RETRY_DELAY = 2  # seconds
-POOL_SIZE = 10   # Increased from 5 to 10
-CONNECTION_TIMEOUT = 30  # Increased from 10 to 30
+POOL_SIZE = 5
+CONNECTION_TIMEOUT = 10
 POOL_NAME = "mypool"
 POOL_LOCK = threading.Lock()
-RECONNECT_INTERVAL = 5  # seconds between reconnection attempts
-MAX_RECONNECT_ATTEMPTS = 10  # maximum number of reconnection attempts
 
 def initialize_db_pool():
     global db_pool
@@ -46,7 +44,7 @@ def initialize_db_pool():
         database = details[3]
         port = int(details[4])
 
-        # Configure the connection pool with enhanced settings
+        # Configure the connection pool
         dbconfig = {
             "host": host,
             "user": user,
@@ -61,14 +59,7 @@ def initialize_db_pool():
             "get_warnings": True,
             "raise_on_warnings": True,
             "connection_timeout": CONNECTION_TIMEOUT,
-            "pool_reset_session": True,
-            "fail_over": True,  # Enable failover
-            "retry_count": 3,   # Number of retries for failed operations
-            "retry_delay": 1,   # Delay between retries in seconds
-            "consume_results": True,
-            "buffered": True,
-            "raw": False,
-            "ssl_disabled": True  # Disable SSL for local development
+            "pool_reset_session": True
         }
 
         with POOL_LOCK:
@@ -84,13 +75,12 @@ def initialize_db_pool():
 def get_connection():
     global db_pool
     retries = 0
-    last_error = None
     
     while retries < MAX_RETRIES:
         try:
             if db_pool is None:
                 if not initialize_db_pool():
-                    time.sleep(RETRY_DELAY * (2 ** retries))  # Exponential backoff
+                    time.sleep(RETRY_DELAY)
                     retries += 1
                     continue
 
@@ -105,16 +95,15 @@ def get_connection():
                 return connection
             else:
                 connection.close()
-                time.sleep(RETRY_DELAY * (2 ** retries))  # Exponential backoff
+                time.sleep(RETRY_DELAY)
                 retries += 1
 
         except mysql.connector.Error as err:
-            last_error = err
             print(f"Database connection error: {err}")
-            time.sleep(RETRY_DELAY * (2 ** retries))  # Exponential backoff
+            time.sleep(RETRY_DELAY)
             retries += 1
             if retries == MAX_RETRIES:
-                print(f"Max retries reached. Could not establish database connection. Last error: {last_error}")
+                print("Max retries reached. Could not establish database connection.")
                 return None
             # Try to reinitialize the pool on error
             with POOL_LOCK:
@@ -129,8 +118,7 @@ def is_mysql_available():
             connection.close()
             return True
         return False
-    except Exception as e:
-        print(f"Error checking MySQL availability: {e}")
+    except:
         return False
 
 def handle_mysql_error(error):
@@ -140,7 +128,7 @@ def handle_mysql_error(error):
         with POOL_LOCK:
             global db_pool
             db_pool = None
-        return jsonify({"error": "Database connection lost. Attempting to reconnect..."}), 503
+        return jsonify({"error": "Database connection lost. Please try again."}), 503
     elif "Access denied" in error_message:
         return jsonify({"error": "Database access denied. Please check credentials."}), 403
     else:
@@ -156,30 +144,16 @@ def cleanup_connection(connection):
 # Initialize the database pool when the application starts
 initialize_db_pool()
 
-# Add a periodic connection check with exponential backoff
+# Add a periodic connection check
 def check_connection_periodically():
-    retry_count = 0
     while True:
         try:
             if not is_mysql_available():
-                print(f"Database connection lost, attempting to reconnect... (Attempt {retry_count + 1}/{MAX_RECONNECT_ATTEMPTS})")
-                if initialize_db_pool():
-                    print("Successfully reconnected to the database")
-                    retry_count = 0
-                else:
-                    retry_count += 1
-                    if retry_count >= MAX_RECONNECT_ATTEMPTS:
-                        print("Maximum reconnection attempts reached. Please check the database service.")
-                        retry_count = 0
-            else:
-                retry_count = 0  # Reset retry count on successful connection
-                
-            # Use exponential backoff for retry delay
-            delay = RECONNECT_INTERVAL * (2 ** min(retry_count, 5))  # Cap the exponential growth
-            time.sleep(delay)
-        except Exception as e:
-            print(f"Error in connection check: {e}")
-            time.sleep(RECONNECT_INTERVAL)
+                print("Database connection lost, attempting to reconnect...")
+                initialize_db_pool()
+            time.sleep(30)  # Check every 30 seconds
+        except:
+            time.sleep(30)
 
 # Start the periodic connection check in a background thread
 connection_check_thread = threading.Thread(target=check_connection_periodically, daemon=True)
