@@ -2323,6 +2323,53 @@ def insert_bottle_from_station():
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
 
+@app.route('/esp/timeleft/query', methods=['POST'])
+def query_station_timeleft():
+    try:
+        if not is_mysql_available():
+            return jsonify({"error": "MySQL database not responding"}), 500
+
+        data = request.get_json()
+        station_name = data.get('stationName')
+
+        if not station_name:
+            return jsonify({"error": "Missing required field: 'stationName'"}), 400
+
+        cursor = get_cursor()
+        if not cursor:
+            return jsonify({"error": "Database connection not available"}), 500
+
+        # Step 1: Get uniqueId and stationStatus from station_recharge by stationName
+        cursor.execute("SELECT uniqueId, stationStatus FROM station_recharge WHERE stationName = %s LIMIT 1", (station_name,))
+        station_row = cursor.fetchone()
+
+        if not station_row:
+            cursor.close()
+            return jsonify({"error": f"No station found with name '{station_name}'"}), 404
+
+        unique_id, station_status = station_row
+
+        # Step 2: Check if uniqueId is not empty and get timeLeft
+        if unique_id:
+            cursor.execute("SELECT TimeLeft FROM store_recharge WHERE uniqueId = %s", (unique_id,))
+            store_row = cursor.fetchone()
+            cursor.close()
+
+            if store_row and store_row[0]:
+                time_left = store_row[0]
+            else:
+                time_left = "00:00:00"
+        else:
+            cursor.close()
+            time_left = "00:00:00"
+
+        return jsonify({
+            "timeleft": time_left,
+            "stationStatus": station_status
+        }), 200
+
+    except mysql.connector.Error as e:
+        return handle_mysql_error(e)
 
 # {
 #   "stationName": "Station1",
@@ -2487,8 +2534,6 @@ def get_user_check_timeleft():
 
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
-
-
 
 
 @app.route('/table/recharge/users', methods=['GET'])
