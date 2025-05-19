@@ -192,6 +192,31 @@ function handleLogout(e) {
     window.location.href = '/';
 }
 
+// Function to set active sidebar item
+function setActiveSidebarItem() {
+    const currentPath = window.location.pathname;
+    const navItems = document.querySelectorAll('.nav-item');
+    
+    navItems.forEach(item => {
+        // Remove active class from all items
+        item.classList.remove('active');
+        
+        // Check if the item's onclick function matches the current path
+        const onclickAttr = item.getAttribute('onclick');
+        if (onclickAttr) {
+            if (currentPath === '/user-dashboard' && onclickAttr.includes('navigateToDashboard')) {
+                item.classList.add('active');
+            } else if (currentPath === '/history' && onclickAttr.includes('navigateToHistory')) {
+                item.classList.add('active');
+            } else if (currentPath === '/rewards' && onclickAttr.includes('navigateToRewards')) {
+                item.classList.add('active');
+            } else if (currentPath === '/leaderboards' && onclickAttr.includes('navigateToLeaderboards')) {
+                item.classList.add('active');
+            }
+        }
+    });
+}
+
 // Add event listeners when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     // Only check auth status if we're not already on the login page
@@ -210,4 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
     logoutBtns.forEach(btn => {
         btn.addEventListener('click', handleLogout);
     });
+
+    // Set active sidebar item
+    setActiveSidebarItem();
 }); 
