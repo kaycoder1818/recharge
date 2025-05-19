@@ -189,46 +189,49 @@ async function selectStation(station) {
 }
 
 // Add insert bottle functionality
-document.getElementById('insert-bottle-btn').addEventListener('click', async () => {
-    try {
-        const userEmail = localStorage.getItem('userEmail');
-        const selectedStation = localStorage.getItem('selectedStation');
-        
-        if (!userEmail || !selectedStation) {
-            alert('Please select a station first');
-            return;
+const insertBottleBtn = document.getElementById('insert-bottle-btn');
+if (insertBottleBtn) {
+    insertBottleBtn.addEventListener('click', async () => {
+        try {
+            const userEmail = localStorage.getItem('userEmail');
+            const selectedStation = localStorage.getItem('selectedStation');
+            
+            if (!userEmail || !selectedStation) {
+                alert('Please select a station first');
+                return;
+            }
+    
+            const response = await fetch(`${API_BASE_URL}/user/insert-bottle`, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: userEmail,
+                    station: selectedStation,
+                    bottleCount: 1
+                })
+            });
+    
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+    
+            const data = await response.json();
+            
+            // Refresh the bottle summary to update counts
+            await fetchBottleSummary();
+            
+            // Show success message
+            alert('Bottle inserted successfully!');
+            
+        } catch (error) {
+            console.error('Failed to insert bottle:', error);
+            alert('Failed to insert bottle. Please try again.');
         }
-
-        const response = await fetch(`${API_BASE_URL}/user/insert-bottle`, {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                email: userEmail,
-                station: selectedStation,
-                bottleCount: 1
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        
-        // Refresh the bottle summary to update counts
-        await fetchBottleSummary();
-        
-        // Show success message
-        alert('Bottle inserted successfully!');
-        
-    } catch (error) {
-        console.error('Failed to insert bottle:', error);
-        alert('Failed to insert bottle. Please try again.');
-    }
-});
+    });
+}
 
 // Initialize data when page loads
 document.addEventListener('DOMContentLoaded', () => {
