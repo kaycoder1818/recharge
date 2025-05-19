@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://recharge-ashen.vercel.app';
+import { API_BASE_URL } from './config.js';
 
 // Fetch total bottles from API
 async function fetchTotalBottles() {
