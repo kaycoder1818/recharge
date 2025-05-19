@@ -29,49 +29,49 @@
             </button>
         </div>
         <nav class="sidebar-nav">
-<!-- 
-             <a href="/user-dashboard" class="nav-item active">
-                <i class="fas fa-home"></i>
-                <span>Home</span>
-            </a>
-            <a href="/history" class="nav-item">
-                <i class="fas fa-history"></i>
-                <span>History</span>
-            </a>
-            <a href="/rewards" class="nav-item">
-                <i class="fas fa-gift"></i>
-                <span>Rewards</span>
-            </a>
-            <a href="/leaderboards" class="nav-item">
-                <i class="fas fa-trophy"></i>
-                <span>Leaderboards</span>
-            </a> -->
 
-    <a href="javascript:void(0)" class="nav-item active" data-url="/user-dashboard">
-        <i class="fas fa-home"></i>
-        <span>Home</span>
-    </a>
-    <a href="javascript:void(0)" class="nav-item" data-url="/history">
-        <i class="fas fa-history"></i>
-        <span>History</span>
-    </a>
-    <a href="javascript:void(0)" class="nav-item" data-url="/rewards">
-        <i class="fas fa-gift"></i>
-        <span>Rewards</span>
-    </a>
-    <a href="javascript:void(0)" class="nav-item" data-url="/leaderboards">
-        <i class="fas fa-trophy"></i>
-        <span>Leaderboards</span>
-    </a>
-    <a href="javascript:void(0)" id="logout_btn" class="nav-item logout">
-        <i class="fas fa-sign-out-alt"></i>
-        <span>Logout</span>
-    </a>
+<!--          <a href="/user-dashboard" class="nav-item active">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="/history" class="nav-item">
+            <i class="fas fa-history"></i>
+            <span>History</span>
+        </a>
+        <a href="/rewards" class="nav-item">
+            <i class="fas fa-gift"></i>
+            <span>Rewards</span>
+        </a>
+        <a href="/leaderboards" class="nav-item">
+            <i class="fas fa-trophy"></i>
+            <span>Leaderboards</span>
+        </a> -->
+
+        <a href="javascript:void(0)" class="nav-item active" onclick="navigateToDashboard()">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-item" onclick="navigateToHistory()">
+            <i class="fas fa-history"></i>
+            <span>History</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-item" onclick="navigateToRewards()">
+            <i class="fas fa-gift"></i>
+            <span>Rewards</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-item" onclick="navigateToLeaderboards()">
+            <i class="fas fa-trophy"></i>
+            <span>Leaderboards</span>
+        </a>
+        <a href="javascript:void(0)" id="logout_btn" class="nav-item logout" onclick="logoutUser()">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+        </a>
 
     </nav>
     </div>
 
-    
+
 
     <!-- Overlay for mobile -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>

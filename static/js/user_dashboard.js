@@ -10,27 +10,30 @@ const stationMessage = document.getElementById('station-message');
 // Get all station buttons
 const stationButtons = document.querySelectorAll('.station-button');
 
-document.addEventListener("DOMContentLoaded", function () {
-    const navItems = document.querySelectorAll(".nav-item");
+function navigateToDashboard() {
+    console.log("Navigating to /user-dashboard");
+    window.location.href = "/user-dashboard";
+}
 
-    navItems.forEach(item => {
-        item.addEventListener("click", function () {
-            if (this.id === "logout_btn") {
-                console.log("Logout button clicked");
-                // Add logout logic here if needed
-                return;
-            }
+function navigateToHistory() {
+    console.log("Navigating to /history");
+    window.location.href = "/history";
+}
 
-            const targetUrl = this.getAttribute("data-url");
-            if (targetUrl) {
-                console.log(`Navigating to: ${targetUrl}`);
-                window.location.href = targetUrl;
-            } else {
-                console.log("No data-url found.");
-            }
-        });
-    });
-});
+function navigateToRewards() {
+    console.log("Navigating to /rewards");
+    window.location.href = "/rewards";
+}
+
+function navigateToLeaderboards() {
+    console.log("Navigating to /leaderboards");
+    window.location.href = "/leaderboards";
+}
+
+function logoutUser() {
+    console.log("Logout button clicked");
+    // Add logout logic here (e.g. window.location.href = "/logout";)
+}
     
 async function fetchBottleSummary() {
     try {
