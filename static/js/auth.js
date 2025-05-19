@@ -1,26 +1,6 @@
 // import { API_BASE_URL } from 'config.js';
 const API_BASE_URL = 'https://recharge-ashen.vercel.app';
 
-// Function to show notifications
-function showNotification(message, type = 'info') {
-    // Create notification element if it doesn't exist
-    let notification = document.getElementById('notification');
-    if (!notification) {
-        notification = document.createElement('div');
-        notification.id = 'notification';
-        document.body.appendChild(notification);
-    }
-
-    notification.textContent = message;
-    notification.className = `notification ${type}`;
-    notification.style.display = 'block';
-
-    // Hide notification after 3 seconds
-    setTimeout(() => {
-        notification.style.display = 'none';
-    }, 3000);
-}
-
 // Function to validate email format
 function isValidEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
