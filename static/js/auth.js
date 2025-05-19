@@ -62,6 +62,13 @@ function setLoading(isLoading) {
     }
 }
 
+// Function to show notification
+function showNotification(message, type = 'success') {
+    const errorElement = document.getElementById('error-message');
+    errorElement.textContent = message;
+    errorElement.style.color = type === 'success' ? '#28a745' : '#dc3545';
+}
+
 // Function to handle login
 async function handleLogin(e) {
     e.preventDefault();
