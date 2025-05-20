@@ -1131,11 +1131,11 @@ def edit_user_recharge():
 #             return jsonify({"error": "Missing required field: 'email'"}), 400
 
 #                 # Get a database connection and cursor
-        connection = get_connection()  # Get the MySQL connection
-        if connection is None:
-            return jsonify({"error": "Failed to connect to the database"}), 500
+        # connection = get_connection()  # Get the MySQL connection
+        # if connection is None:
+        #     return jsonify({"error": "Failed to connect to the database"}), 500
         
-        cursor = connection.cursor()
+        # cursor = connection.cursor()
 #         if cursor:
 #             # Check if user exists
 #             cursor.execute("SELECT id FROM users_recharge WHERE email = %s LIMIT 1", (email,))
@@ -1169,14 +1169,14 @@ def delete_user_by_email():
         if not email:
             return jsonify({"error": "Missing required field: 'email'"}), 400
 
-                # Get a database connection and cursor
-        connection = get_connection()  # Get the MySQL connection
+        # Get a database connection
+        connection = get_connection()
         if connection is None:
             return jsonify({"error": "Failed to connect to the database"}), 500
-        
-        cursor = connection.cursor()
+
+        cursor = connection.cursor(dictionary=True)  # Use dictionary cursor to fetch column names
         if cursor:
-            # Check if user exists
+            # Step 1: Check if user exists in users_recharge by email
             cursor.execute("SELECT id, uniqueId FROM users_recharge WHERE email = %s LIMIT 1", (email,))
             user = cursor.fetchone()
 
@@ -1186,21 +1186,23 @@ def delete_user_by_email():
 
             unique_id = user['uniqueId']
 
-            # Delete the corresponding record from store_recharge by uniqueId
-            cursor.execute("DELETE FROM store_recharge WHERE uniqueId = %s", (unique_id,))
-            db_connection.commit()
-
-            # Delete user from users_recharge
+            # Step 2: Delete the user from users_recharge table by email
             cursor.execute("DELETE FROM users_recharge WHERE email = %s", (email,))
-            db_connection.commit()
+            connection.commit()
+
+            # Step 3: Delete the corresponding record from store_recharge by uniqueId
+            cursor.execute("DELETE FROM store_recharge WHERE uniqueId = %s", (unique_id,))
+            connection.commit()
+
             cursor.close()
 
             return jsonify({"message": f"User with email '{email}' and related store_recharge record deleted successfully"}), 200
         else:
-            return jsonify({"error": "Database connection not available"}), 500
+            return jsonify({"error": "Database cursor not available"}), 500
 
     except mysql.connector.Error as e:
         return handle_mysql_error(e)
+
 
 
 @app.route('/user/verify', methods=['GET'])
